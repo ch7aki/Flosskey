@@ -23,6 +23,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        supportActionBar?.hide()
         onBackPressedDispatcher.addCallback(this, backCallback)
         // webview初期化
         initializeWebView()
@@ -62,9 +64,23 @@ class MainActivity : AppCompatActivity() {
 
         // WebViewの設定
         webView.webViewClient = MyWebViewClient()
+/*        webView.settings.userAgentString =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, " +
+                    "like Gecko) Chrome/92.0.4515.107 Safari/537.36"*/
         webView.settings.javaScriptEnabled = true
-        webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
+        webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         limitAccesToOuterDomain(webView)
+        webView.loadUrl(MISSKEY_URL)
+        // これつけないとmisskeyアクセスできない
+        webView.settings.domStorageEnabled = true
+
+        //Disable some WebView features
+        webView.settings.allowContentAccess = false
+        webView.settings.allowFileAccess = false
+        webView.settings.builtInZoomControls = false
+        webView.settings.databaseEnabled = false
+        webView.settings.displayZoomControls = false
+        webView.settings.setGeolocationEnabled(false)
 
         // CookieManagerの設定
         cookieManager = CookieManager.getInstance()
@@ -76,8 +92,8 @@ class MainActivity : AppCompatActivity() {
         val savedCookies = sharedPreferences.getString("cookies", null)
 
         savedCookies?.let {
-            val url = "https://misskey.io" // 保存したいドメインを指定する
-            cookieManager.setCookie(url, it)
+            // 保存したいドメインを指定する
+            cookieManager.setCookie(MISSKEY_URL, it)
         }
     }
 
