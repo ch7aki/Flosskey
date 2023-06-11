@@ -1,5 +1,7 @@
 package tokyo.leadershouse.miskeywebview
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import android.view.ContextMenu
@@ -12,15 +14,22 @@ import androidx.appcompat.app.AppCompatActivity
 /*
 TODO misskeyのAPI見て通知を自力で取りにいく実装をする
 TODO PWA出来ないブラウザ愛好者向けとかOSSだからとかいう以外のメリットも考える
+TODO ApiKeyInputDialogの実装はOK 後はMAINでAPIKEYをハンドリングする
+TODO ビルドしてAPI持ててるか確認する。その後通知とかかな...
 */
 
 const val MISSKEY_URL = "https://misskey.io"
-class MainActivity : AppCompatActivity() {
-    private lateinit var webView: WebView
+class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     private val contenMenuId = 1001
+    private lateinit var apiKey: String
+    private lateinit var webView: WebView
+    private lateinit var sharedPreferences: SharedPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // APIキーチェック
+        if (!checkApi()){ showApiKeyInputDialog() }
         // 外観変更
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
@@ -37,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         MisskeyWebViewClient(this).initializeWebView(webView)
     }
 
+    // 長押しメニュー作成処理
     override fun onCreateContextMenu(
         menu: ContextMenu?,
         v: View?,
@@ -50,7 +60,7 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-
+    // 長押しメニュー押下処理
     override fun onContextItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             contenMenuId -> {
@@ -66,6 +76,33 @@ class MainActivity : AppCompatActivity() {
             }
             else -> super.onContextItemSelected(item)
         }
+    }
+
+    // ダイアログからのコールバック
+    override fun onApiKeyEntered(apiKey: String) {
+        // APIキーを保存し、必要な処理を実行する
+        saveApiKey(apiKey)
+        // ...
+    }
+
+    // ダイアログ表示
+    private fun showApiKeyInputDialog() {
+        val apiKeyInputDialog = ApiKeyInputDialog(this)
+        apiKeyInputDialog.setApiKeyListener(this) // リスナーをセット
+        apiKeyInputDialog.show()
+    }
+
+    // API保存
+    private fun saveApiKey(apiKey: String) {
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("api_key", apiKey)
+        editor.apply()
+    }
+
+    private fun checkApi() : Boolean{
+        apiKey = sharedPreferences.getString("api_key", "") ?: ""
+        return !apiKey.isEmpty()
     }
 
     override fun onDestroy() {
