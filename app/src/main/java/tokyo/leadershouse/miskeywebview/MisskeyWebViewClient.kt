@@ -52,25 +52,25 @@ class MisskeyWebViewClient(private val context: Context) : WebViewClient(){
     fun initializeWebView(webView: WebView) {
         // WebViewの設定
         webView.webViewClient = MisskeyWebViewClient(context)
-        webView.settings.javaScriptEnabled = true
         webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+        webView.settings.javaScriptEnabled   = true
         limitAccesToOuterDomain(webView)
         webView.loadUrl(MISSKEY_URL)
         // これつけないとmisskeyアクセスできない
-        webView.settings.domStorageEnabled = true
+        webView.settings.domStorageEnabled   = true
 
         // 画像保存対応
-        webView.settings.allowFileAccess = true
-        webView.settings.allowContentAccess = true
+        webView.settings.allowFileAccess     = true
+        webView.settings.allowContentAccess  = true
         webView.webChromeClient = WebChromeClient()
         script.trimIndent()
         webView.evaluateJavascript(script,null)
 
         // 余計な機能は無効にしておく
-        webView.settings.allowContentAccess = false
-        webView.settings.allowFileAccess = false
+        webView.settings.allowContentAccess  = false
+        webView.settings.allowFileAccess     = false
         webView.settings.builtInZoomControls = false
-        webView.settings.databaseEnabled = false
+        webView.settings.databaseEnabled     = false
         webView.settings.displayZoomControls = false
         webView.settings.setGeolocationEnabled(false)
 

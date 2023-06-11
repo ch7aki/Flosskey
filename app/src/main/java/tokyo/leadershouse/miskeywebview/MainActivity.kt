@@ -40,23 +40,27 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateContextMenu(
         menu: ContextMenu?,
         v: View?,
-        menuInfo: ContextMenu.ContextMenuInfo?
-    ) {
-        super.onCreateContextMenu(menu, v, menuInfo)
-        menu?.add(0, contenMenuId, 0, "Download") // コンテキストメニューの項目を追加
+        menuInfo: ContextMenu.ContextMenuInfo?) {
+            super.onCreateContextMenu(menu, v, menuInfo)
+            val webView = v as WebView
+            val hitTestResult = webView.hitTestResult
+            // 画像だけ長押し時の挙動を変える
+            if (hitTestResult.type == WebView.HitTestResult.IMAGE_TYPE) {
+                menu?.add(0, contenMenuId, 0, "Download") // コンテキストメニューの項目を追加
+            }
     }
+
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             contenMenuId -> {
                 val webViewHitTestResult = webView.hitTestResult
-                if (webViewHitTestResult.type == WebView.HitTestResult.IMAGE_TYPE) {
-                    val imageUrl = webViewHitTestResult.extra
-                    if (imageUrl != null) {
-                        ImageDownloader(this).saveImage(imageUrl)
-                    }
+                val imageUrl = webViewHitTestResult.extra
+                if (imageUrl != null) {
+                    ImageDownloader(this).saveImage(imageUrl)
                     true
-                } else {
+                }
+                else {
                     false
                 }
             }
