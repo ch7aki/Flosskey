@@ -66,9 +66,11 @@ class MisskeyWebViewClient(private val context: Context) : WebViewClient(){
         script.trimIndent()
         webView.evaluateJavascript(script,null)
 
+        // 画像投稿のため
+        webView.settings.allowContentAccess  = true
+        webView.settings.allowFileAccess     = true
+
         // 余計な機能は無効にしておく
-        webView.settings.allowContentAccess  = false
-        webView.settings.allowFileAccess     = false
         webView.settings.builtInZoomControls = false
         webView.settings.databaseEnabled     = false
         webView.settings.displayZoomControls = false
@@ -77,5 +79,4 @@ class MisskeyWebViewClient(private val context: Context) : WebViewClient(){
         // CookieManagerの設定
         CookieHandler(context).manageCookie()
     }
-
 }

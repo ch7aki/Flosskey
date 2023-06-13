@@ -9,6 +9,7 @@ import android.view.MenuItem
 import android.view.View
 import android.webkit.*
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 
 /*
@@ -29,7 +30,7 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         // APIキーチェック
-        if (!checkApi()){ showApiKeyInputDialog() }
+        //if (!checkApi()){ showApiKeyInputDialog() }
         // 外観変更
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
@@ -102,12 +103,28 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
 
     private fun checkApi() : Boolean{
         apiKey = sharedPreferences.getString("api_key", "") ?: ""
-        return !apiKey.isEmpty()
+        return apiKey.isNotEmpty()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         webView.destroy()
+    }
+
+    override fun onBackPressed() {
+        val builder = AlertDialog.Builder(this)
+        if (webView.canGoBack()) {
+            webView.goBack() // WebView内のページを1つ戻す
+        } else {
+            builder.setMessage("アプリを終了しますか？")
+            builder.setPositiveButton("いいえ") { _, _ ->
+                finish()
+            }
+            builder.setNegativeButton("はい") { dialog, _ ->
+                dialog.dismiss()
+            }
+            builder.show()
+        }
     }
 
     private val backCallback = object : OnBackPressedCallback(true) {
