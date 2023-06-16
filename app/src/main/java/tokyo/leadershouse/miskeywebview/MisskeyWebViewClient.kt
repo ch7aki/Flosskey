@@ -1,16 +1,23 @@
 package tokyo.leadershouse.miskeywebview
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.net.Uri
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 
-class MisskeyWebViewClient(private val context: Context) : WebViewClient(){
+class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClient() {
+    private val REQUEST_FILE_UPLOAD = 1
+    private lateinit var launcher: ActivityResultLauncher<Intent>
+    private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
 
     private val script = """
             (function() {
@@ -50,6 +57,15 @@ class MisskeyWebViewClient(private val context: Context) : WebViewClient(){
 
     @SuppressLint("SetJavaScriptEnabled")
     fun initializeWebView(webView: WebView) {
+        launcher = context.registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult())
+        { result ->
+            if (result.resultCode == RESULT_OK) {
+                val data: Intent? = result.data
+                // 結果の処理を行う
+                onActivityResult(REQUEST_FILE_UPLOAD, result.resultCode, data)
+            }
+        }
         // WebViewの設定
         webView.webViewClient = MisskeyWebViewClient(context)
         webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
@@ -62,7 +78,19 @@ class MisskeyWebViewClient(private val context: Context) : WebViewClient(){
         // 画像保存対応
         webView.settings.allowFileAccess     = true
         webView.settings.allowContentAccess  = true
-        webView.webChromeClient = WebChromeClient()
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+            webView: WebView,
+            filePathCallback: ValueCallback<Array<Uri>>,
+            fileChooserParams: WebChromeClient.FileChooserParams
+        ): Boolean {
+                // 一旦権限チェックしない
+                fileUploadCallback = filePathCallback
+                openFilePicker()
+                return true
+            }
+        }
+
         script.trimIndent()
         webView.evaluateJavascript(script,null)
 
@@ -78,5 +106,26 @@ class MisskeyWebViewClient(private val context: Context) : WebViewClient(){
 
         // CookieManagerの設定
         CookieHandler(context).manageCookie()
+    }
+
+    private fun openFilePicker() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "image/*"
+        launcher.launch(intent)
+    }
+
+    private fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQUEST_FILE_UPLOAD && resultCode == RESULT_OK) {
+            data?.let { intent ->
+                val result = if (intent.data != null) {
+                    arrayOf(intent.data!!)
+                } else {
+                    null
+                }
+                fileUploadCallback?.onReceiveValue(result)
+                fileUploadCallback = null
+            }
+        }
     }
 }
