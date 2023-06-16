@@ -35,8 +35,26 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
         // 戻るボタン無効化
-        onBackPressedDispatcher.addCallback(this, backCallback)
-        // Cookie復元
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                    // バックボタンが押された時の処理をここに記述します
+                    val builder = AlertDialog.Builder(this@MainActivity)
+                    if (webView.canGoBack()) {
+                        webView.goBack() // WebView内のページを1つ戻す
+                    } else {
+                        builder.setMessage("アプリを終了しますか？")
+                        builder.setNegativeButton("いいえ") { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        builder.setPositiveButton("はい") { _, _ ->
+                            finish()
+                        }
+                        builder.show()
+                    }
+                }
+            }
+        this.onBackPressedDispatcher.addCallback(this, callback)
+        // Cookie
         CookieHandler(this).loadCookies()
         // 権限処理
         val permissionHandler = PermissionHandler(this)
@@ -109,22 +127,6 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     override fun onDestroy() {
         super.onDestroy()
         webView.destroy()
-    }
-
-    override fun onBackPressed() {
-        val builder = AlertDialog.Builder(this)
-        if (webView.canGoBack()) {
-            webView.goBack() // WebView内のページを1つ戻す
-        } else {
-            builder.setMessage("アプリを終了しますか？")
-            builder.setPositiveButton("いいえ") { _, _ ->
-                finish()
-            }
-            builder.setNegativeButton("はい") { dialog, _ ->
-                dialog.dismiss()
-            }
-            builder.show()
-        }
     }
 
     private val backCallback = object : OnBackPressedCallback(true) {
