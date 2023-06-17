@@ -1,5 +1,4 @@
 package tokyo.leadershouse.miskeywebview
-
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
@@ -15,7 +14,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 
 class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClient() {
-    private val REQUEST_FILE_UPLOAD = 1
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
 
@@ -40,13 +38,14 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
 
     private fun limitAccesToOuterDomain(webView: WebView) {
         webView.webViewClient = object : WebViewClient() {
+            @SuppressLint("QueryPermissionsNeeded")
             override fun shouldOverrideUrlLoading(
                 view: WebView,
                 request: WebResourceRequest
             ): Boolean {
                 val url = request.url.toString()
-                if (!url.contains("misskey.io")) {
-                    // それ以外のドメインの場合、外部ブラウザを起動してURLを開く処理を記述します
+                if (!url.contains(MISSKEY_DOMAIN)) {
+                    // それ以外のドメインの場合、外部ブラウザを起動
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     context.startActivity(intent)
                 }
@@ -62,29 +61,22 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
         { result ->
             if (result.resultCode == RESULT_OK) {
                 val data: Intent? = result.data
-                // 結果の処理を行う
-                onActivityResult(REQUEST_FILE_UPLOAD, result.resultCode, data)
+                onActivityResult(data)
             }
         }
         // WebViewの設定
         webView.webViewClient = MisskeyWebViewClient(context)
         webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         webView.settings.javaScriptEnabled   = true
+        webView.settings.domStorageEnabled   = true
         limitAccesToOuterDomain(webView)
         webView.loadUrl(MISSKEY_URL)
-        // これつけないとmisskeyアクセスできない
-        webView.settings.domStorageEnabled   = true
-
-        // 画像保存対応
-        webView.settings.allowFileAccess     = true
-        webView.settings.allowContentAccess  = true
         webView.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(
             webView: WebView,
             filePathCallback: ValueCallback<Array<Uri>>,
-            fileChooserParams: WebChromeClient.FileChooserParams
+            fileChooserParams: FileChooserParams
         ): Boolean {
-                // 一旦権限チェックしない
                 fileUploadCallback = filePathCallback
                 openFilePicker()
                 return true
@@ -94,11 +86,9 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
         script.trimIndent()
         webView.evaluateJavascript(script,null)
 
-        // 画像投稿のため
-        webView.settings.allowContentAccess  = true
-        webView.settings.allowFileAccess     = true
-
         // 余計な機能は無効にしておく
+        webView.settings.allowContentAccess  = false
+        webView.settings.allowFileAccess     = false
         webView.settings.builtInZoomControls = false
         webView.settings.databaseEnabled     = false
         webView.settings.displayZoomControls = false
@@ -115,8 +105,7 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
         launcher.launch(intent)
     }
 
-    private fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_FILE_UPLOAD && resultCode == RESULT_OK) {
+    private fun onActivityResult(data: Intent?) {
             data?.let { intent ->
                 val result = if (intent.data != null) {
                     arrayOf(intent.data!!)
@@ -126,6 +115,5 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
                 fileUploadCallback?.onReceiveValue(result)
                 fileUploadCallback = null
             }
-        }
     }
 }

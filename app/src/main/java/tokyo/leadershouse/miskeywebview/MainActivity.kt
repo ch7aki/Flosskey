@@ -1,12 +1,9 @@
 package tokyo.leadershouse.miskeywebview
-
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.ContextMenu
 import android.view.MenuItem
 import android.view.View
@@ -23,6 +20,7 @@ TODO ビルドしてAPI持ててるか確認する。その後通知とかかな
 */
 
 const val MISSKEY_URL = "https://misskey.io"
+const val MISSKEY_DOMAIN = "misskey.io"
 class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     private val contenMenuId = 1001
     private lateinit var apiKey: String
@@ -32,15 +30,15 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Log.d("debug","Main")
         // APIキーチェック
-        //if (!checkApi()){ showApiKeyInputDialog() }
+        if (!checkApi()){ showApiKeyInputDialog() }
         // 外観変更
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
-        // 戻るボタン無効化
+        // 戻るボタン制御
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                    // バックボタンが押された時の処理をここに記述します
                     val builder = AlertDialog.Builder(this@MainActivity)
                     if (webView.canGoBack()) {
                         webView.goBack() // WebView内のページを1つ戻す
@@ -104,7 +102,6 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     override fun onApiKeyEntered(apiKey: String) {
         // APIキーを保存し、必要な処理を実行する
         saveApiKey(apiKey)
-        // ...
     }
 
     // ダイアログ表示
@@ -123,6 +120,7 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     }
 
     private fun checkApi() : Boolean{
+        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         apiKey = sharedPreferences.getString("api_key", "") ?: ""
         return apiKey.isNotEmpty()
     }
@@ -130,10 +128,5 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     override fun onDestroy() {
         super.onDestroy()
         webView.destroy()
-    }
-
-    private val backCallback = object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-        }
     }
 }
