@@ -84,9 +84,7 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
                     ImageDownloader(this).saveImage(imageUrl)
                     true
                 }
-                else {
-                    false
-                }
+                else { false }
             }
             else -> super.onContextItemSelected(item)
         }
@@ -94,7 +92,6 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
 
     // ダイアログからのコールバック
     override fun onApiKeyEntered(apiKey: String) {
-        // APIキーを保存し、必要な処理を実行する
         saveApiKey(apiKey)
     }
 
@@ -140,6 +137,7 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     }
 
     override fun onDestroy() {
+        Log.d("debug", "onDestroy")
         super.onDestroy()
         webView.destroy()
     }

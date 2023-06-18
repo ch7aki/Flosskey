@@ -15,25 +15,21 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
 
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
     companion object {
-        private const val TAG = "NotificationJobService"
         private const val JOB_ID_RANGE_START = 1000
-        private const val JOB_ID_RANGE_END = 2000
+        private const val JOB_ID_RANGE_END   = 2000
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("debug","onStartJob[IN]")
         val apiKey = params?.extras?.getString("apiKey")
-        if (apiKey != null) {
-            fetchNotifications(apiKey)
-        } else {
-            Log.d("debug", "apiKey is null")
-            return false
-        }
+        if (apiKey != null) { fetchNotifications(apiKey) }
+        else { return false }
         scheduleJob()
         Log.d("debug","onStartJob[OUT]")
         return true
@@ -62,7 +58,6 @@ class NotificationJobService : JobService() {
 
             val request = Request.Builder()
                 .url(url)
-/*                .addHeader("Authorization", "Bearer $apiKey")*/
                 .post(requestBody)
                 .build()
 
@@ -70,49 +65,35 @@ class NotificationJobService : JobService() {
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
-                    if (!responseBody.isNullOrBlank()) {
-                        processNotifications(responseBody)
-                    }
-                } else {
-                    Log.d("debug", "Failed to retrieve notifications: ${response.code}")
-                }
-            } catch (e: Exception) {
-                Log.d("debug", "Failed to retrieve notifications", e)
-            }
+                    if (!responseBody.isNullOrBlank()) { processNotifications(responseBody) }
+                } else { Log.d("debug", "Failed to retrieve notifications: ${response.code}") }
+            } catch (e: Exception) { Log.d("debug", "Failed to retrieve notifications", e) }
         }
-
         thread.start()
-
         Log.d("debug","fetchNotifications[OUT]")
     }
 
     private fun processNotifications(responseBody: String) {
-        Log.d("debug","processNotifications[IN]")
-        val notifications = JSONObject(responseBody).optJSONArray("data")
-        if (notifications != null) {
-            Log.d("debug", notifications.toString())
-        }
-        else { Log.d("debug", "notifications is null") }
-        if (notifications != null) {
-            for (i in 0 until notifications.length()) {
-                val notification = notifications.optJSONObject(i)
-                val type         = notification.optString("type")
-                val user         = notification.optJSONObject("user")
-                val name         = user?.optString("name")
-                val reaction     = notification.optString("reaction")
+        Log.d("debug", "processNotifications[IN]")
+        val jsonArray = JSONArray(responseBody)
+        for (i in 0 until jsonArray.length()) {
+            val notification = jsonArray.optJSONObject(i)
+            val type = notification.optString("type")
+            val user = notification.optJSONObject("user")
+            val name = user?.optString("name")
+            val reaction = notification.optString("reaction")
 
-                when (type) {
-                    "follow"               -> sendNotification("$name にフォローされました")
-                    "mention"              -> sendNotification("$name にメンションされました")
-                    "reply"                -> sendNotification("$name にリノートされました")
-                    "quote"                -> sendNotification("$name に引用されました")
-                    "reaction"             -> sendNotification("$name から$reaction されました")
-                    "receiveFollowRequest" -> sendNotification("$name からフォロー申請されました")
-                    "allowFollowRequest"   -> sendNotification("$name へのフォローが許可されました")
-                }
+            when (type) {
+                "follow"               -> sendNotification("$name にフォローされました")
+                "mention"              -> sendNotification("$name にメンションされました")
+                "reply"                -> sendNotification("$name にリノートされました")
+                "quote"                -> sendNotification("$name に引用されました")
+                "reaction"             -> sendNotification("$name から$reaction されました")
+                "receiveFollowRequest" -> sendNotification("$name からフォロー申請されました")
+                "allowFollowRequest"   -> sendNotification("$name へのフォローが許可されました")
             }
         }
-        Log.d("debug","processNotifications[OUT]")
+        Log.d("debug", "processNotifications[OUT]")
     }
 
     private fun sendNotification(message: String) {
