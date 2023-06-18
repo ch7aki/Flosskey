@@ -23,13 +23,13 @@ class ApiKeyInputDialog(
         val apiKeyEditText = dialogView.findViewById<EditText>(R.id.apiKeyEditText)
 
         val dialog = AlertDialog.Builder(context)
-            .setTitle("API Key")
+            .setTitle("API Keyを入力してください")
             .setView(dialogView)
             .setPositiveButton("OK") { _, _ ->
                 val apiKey = apiKeyEditText.text.toString()
                 listener?.onApiKeyEntered(apiKey)
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton("また今度", null)
             .create()
 
         dialog.show()

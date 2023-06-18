@@ -16,6 +16,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication"
         android:hardwareAccelerated="true">
+        <service
+            android:name=".NotificationJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <meta-data
             android:name="android:requestLegacyExternalStorage"
             android:value="true" />

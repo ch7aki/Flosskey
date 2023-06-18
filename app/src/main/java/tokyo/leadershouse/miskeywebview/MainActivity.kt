@@ -1,8 +1,12 @@
 package tokyo.leadershouse.miskeywebview
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.ContextMenu
 import android.view.MenuItem
@@ -12,27 +16,21 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 
-/*
-TODO misskeyのAPI見て通知を自力で取りにいく実装をする
-TODO PWA出来ないブラウザ愛好者向けとかOSSだからとかいう以外のメリットも考える
-TODO ApiKeyInputDialogの実装はOK 後はMAINでAPIKEYをハンドリングする
-TODO ビルドしてAPI持ててるか確認する。その後通知とかかな...
-*/
-
-const val MISSKEY_URL = "https://misskey.io"
-const val MISSKEY_DOMAIN = "misskey.io"
+const val MISSKEY_URL      = "https://misskey.io"
+const val MISSKEY_DOMAIN   = "misskey.io"
+const val MISSKEY_API_URL  = "https://misskey.io/api/i/notifications"
 class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     private val contenMenuId = 1001
-    private lateinit var apiKey: String
+    private var apiKey: String? = null
     private lateinit var webView: WebView
     private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Log.d("debug","Main")
         // APIキーチェック
         if (!checkApi()){ showApiKeyInputDialog() }
+        else { startBackgroundJob() }
         // 外観変更
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
@@ -44,12 +42,8 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
                         webView.goBack() // WebView内のページを1つ戻す
                     } else {
                         builder.setMessage("アプリを終了しますか？")
-                        builder.setNegativeButton("いいえ") { dialog, _ ->
-                            dialog.dismiss()
-                        }
-                        builder.setPositiveButton("はい") { _, _ ->
-                            finish()
-                        }
+                        builder.setPositiveButton("いいえ") { dialog, _ -> dialog.dismiss() }
+                        builder.setNegativeButton("はい") { _, _ -> finish() }
                         builder.show()
                     }
                 }
@@ -122,7 +116,27 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     private fun checkApi() : Boolean{
         sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         apiKey = sharedPreferences.getString("api_key", "") ?: ""
-        return apiKey.isNotEmpty()
+        return apiKey!!.isNotEmpty()
+    }
+
+    // バックグラウンドサービス実行
+    private fun startBackgroundJob() {
+        Log.d("debug", "apiKey:$apiKey で通知取得開始")
+        val componentName = ComponentName(this, NotificationJobService::class.java)
+        val jobId = 1001
+
+        val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .setPeriodic(0) // おそらくAndroid13は最小間隔が10分
+
+        val extras = PersistableBundle()
+        extras.putString("apiKey", apiKey)
+
+        jobInfoBuilder.setExtras(extras)
+
+        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        val jobInfo = jobInfoBuilder.build()
+        jobScheduler.schedule(jobInfo)
     }
 
     override fun onDestroy() {
