@@ -17,6 +17,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
@@ -43,16 +45,18 @@ class NotificationJobService : JobService() {
 
     private fun fetchNotifications(apiKey: String) {
         Log.d("debug","fetchNotifications[IN]")
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        // sinceIdを取り出してそれをパラメータに渡す
+        val sinceId = sharedPreferences.getString("sinceId", "") ?: "0"
+        Log.d("debug",sinceId)
 
         val thread = Thread {
             val client = OkHttpClient()
             val url = MISSKEY_API_URL
             val requestBody = JSONObject()
                 .put("i", apiKey)
-                .put("limit", 100)
-                .put("sinceId", "0")
-                .put("unreadOnly", true)
-                .put("markAsRead", true)
+                .put("limit", 10)
+                .put("sinceId", "\"sinceId\"")
                 .toString()
                 .toRequestBody("application/json".toMediaType())
 
@@ -82,6 +86,23 @@ class NotificationJobService : JobService() {
             val user = notification.optJSONObject("user")
             val name = user?.optString("name")
             val reaction = notification.optString("reaction")
+            // 取得した結果の内一番新しいsinceIdに1ms足してsinceIdとして保存
+            if (i == 0) {
+                val sinceId = notification.optString("id")
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                try {
+                    val dateTime: LocalDateTime = LocalDateTime.parse(sinceId, formatter)
+                    val modifiedDateTime = dateTime.plusNanos(1_000_000)
+                    val modifiedAid = modifiedDateTime.format(formatter)
+                    val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+                    val editor = sharedPreferences.edit()
+                    editor.putString("sinceId", modifiedAid)
+                    editor.apply()
+                    Log.d("debug", "modifiedAid = $modifiedAid")
+                } catch (e: Exception) {
+                    Log.d("debug", "sinceIdの変換できんかった")
+                }
+            }
 
             when (type) {
                 "follow"               -> sendNotification("$name にフォローされました")
