@@ -8,6 +8,7 @@ import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
+import android.content.SharedPreferences
 import android.media.RingtoneManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -17,11 +18,12 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import java.time.LocalDateTime
+import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
+    private lateinit var sharedPreferences: SharedPreferences
     companion object {
         private const val JOB_ID_RANGE_START = 1000
         private const val JOB_ID_RANGE_END   = 2000
@@ -47,7 +49,7 @@ class NotificationJobService : JobService() {
         Log.d("debug","fetchNotifications[IN]")
         val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         // sinceIdを取り出してそれをパラメータに渡す
-        val sinceId = sharedPreferences.getString("sinceId", "") ?: "0"
+        val sinceId = sharedPreferences.getString("sinceId", "0") ?: "0"
         Log.d("debug",sinceId)
 
         val thread = Thread {
@@ -56,7 +58,7 @@ class NotificationJobService : JobService() {
             val requestBody = JSONObject()
                 .put("i", apiKey)
                 .put("limit", 10)
-                .put("sinceId", "\"sinceId\"")
+                .put("sinceId", sinceId)
                 .toString()
                 .toRequestBody("application/json".toMediaType())
 
@@ -82,27 +84,46 @@ class NotificationJobService : JobService() {
         val jsonArray = JSONArray(responseBody)
         for (i in 0 until jsonArray.length()) {
             val notification = jsonArray.optJSONObject(i)
+            val createdAt = notification.optString("createdAt")
+            if (i == 0) {
+                try {
+                    // APIからもらった中で一番新しいcreatedAtと端末のcreatedAtを比較する
+                    // APIが新しい：通知処理し、そのcreatedAtに1ms足したものを保存する
+                    // 端末が新しい：何もせず抜ける
+
+                    // APIのcreatedAt
+                    val instantApi = Instant.parse(createdAt)
+                    // 端末のcratedAt
+                    sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+                    val instantDevcie = Instant.parse(
+                        sharedPreferences.getString(
+                        "createdAt",
+                        "2000-01-01T00:00:00.000Z"
+                    ) ?: "")
+
+                    val comparisonResult = instantApi.compareTo(instantDevcie )
+                    if (comparisonResult > 0) {
+                        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+                        val editor = sharedPreferences.edit()
+                        // 取得した結果の内一番新しいcreatedAtを保存する
+                        editor.putString("createdAt", createdAt)
+                        editor.apply()
+                        Log.d("debug", "modifiedAid = $createdAt")
+                    }
+                    else {
+                        Log.d("debug", "new notification nothing")
+                        break
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("debug", "Failed to parse or modify the datetime", e)
+                }
+            }
+
             val type = notification.optString("type")
             val user = notification.optJSONObject("user")
             val name = user?.optString("name")
             val reaction = notification.optString("reaction")
-            // 取得した結果の内一番新しいsinceIdに1ms足してsinceIdとして保存
-            if (i == 0) {
-                val sinceId = notification.optString("id")
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                try {
-                    val dateTime: LocalDateTime = LocalDateTime.parse(sinceId, formatter)
-                    val modifiedDateTime = dateTime.plusNanos(1_000_000)
-                    val modifiedAid = modifiedDateTime.format(formatter)
-                    val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-                    val editor = sharedPreferences.edit()
-                    editor.putString("sinceId", modifiedAid)
-                    editor.apply()
-                    Log.d("debug", "modifiedAid = $modifiedAid")
-                } catch (e: Exception) {
-                    Log.d("debug", "sinceIdの変換できんかった")
-                }
-            }
 
             when (type) {
                 "follow"               -> sendNotification("$name にフォローされました")
