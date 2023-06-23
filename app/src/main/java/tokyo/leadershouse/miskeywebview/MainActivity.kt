@@ -5,7 +5,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
@@ -16,7 +15,6 @@ import android.webkit.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import okio.IOException
 import java.io.File
 
 const val MISSKEY_URL      = "https://misskey.io"
@@ -62,7 +60,6 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         webView = findViewById(R.id.webView)
         registerForContextMenu(webView)
         MisskeyWebViewClient(this).initializeWebView(webView)
-        startLogcatCapture()
     }
 
     // 長押しメニュー作成処理
@@ -141,27 +138,6 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         jobScheduler.schedule(jobInfo)
     }
 
-    private fun startLogcatCapture() {
-        try {
-            // ログキャットの出力をファイルに保存する
-            val logFilePath = getLogFilePath()
-            val process = Runtime.getRuntime().exec("logcat -f $logFilePath")
-            Log.d("debug", "Logcat capture started")
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun stopLogcatCapture() {
-        try {
-            // ログキャットのキャプチャを停止する
-            Runtime.getRuntime().exec("logcat -f /dev/null")
-            Log.d("debug", "Logcat capture stopped")
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
     private fun getLogFilePath() {
         // Android 10以降では外部ストレージの代わりにアプリ専用ディレクトリを使用する
         val logDir = getExternalFilesDir(null)
@@ -176,7 +152,6 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
 
     override fun onDestroy() {
         Log.d("debug", "onDestroy")
-        stopLogcatCapture()
         super.onDestroy()
         webView.destroy()
     }

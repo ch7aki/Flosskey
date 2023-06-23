@@ -19,7 +19,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
-import java.time.format.DateTimeFormatter
 
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
@@ -47,18 +46,14 @@ class NotificationJobService : JobService() {
 
     private fun fetchNotifications(apiKey: String) {
         Log.d("debug","fetchNotifications[IN]")
-        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        // sinceIdを取り出してそれをパラメータに渡す
-        val sinceId = sharedPreferences.getString("sinceId", "0") ?: "0"
-        Log.d("debug",sinceId)
 
         val thread = Thread {
             val client = OkHttpClient()
             val url = MISSKEY_API_URL
             val requestBody = JSONObject()
                 .put("i", apiKey)
-                .put("limit", 10)
-                .put("sinceId", sinceId)
+                // ぶっちゃけsinceIdを変換してハンドリングしたいが一旦はcreatedAtで通知判定する...
+                .put("limit", 100)
                 .toString()
                 .toRequestBody("application/json".toMediaType())
 
@@ -85,56 +80,44 @@ class NotificationJobService : JobService() {
         for (i in 0 until jsonArray.length()) {
             val notification = jsonArray.optJSONObject(i)
             val createdAt = notification.optString("createdAt")
-            if (i == 0) {
-                try {
-                    // APIからもらった中で一番新しいcreatedAtと端末のcreatedAtを比較する
-                    // APIが新しい：通知処理し、そのcreatedAtに1ms足したものを保存する
-                    // 端末が新しい：何もせず抜ける
+            // API叩いて取得した通知のcratedAt
+            val instantApi = Instant.parse(createdAt)
+            // 端末が既知の最新の通知のcratedAt
+            sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+            val instantDevcie = Instant.parse(
+                sharedPreferences.getString(
+                    "createdAt",
+                    "2000-01-01T00:00:00.000Z"
+                ) ?: "")
 
-                    // APIのcreatedAt
-                    val instantApi = Instant.parse(createdAt)
-                    // 端末のcratedAt
-                    sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-                    val instantDevcie = Instant.parse(
-                        sharedPreferences.getString(
-                        "createdAt",
-                        "2000-01-01T00:00:00.000Z"
-                    ) ?: "")
-
-                    val comparisonResult = instantApi.compareTo(instantDevcie )
-                    if (comparisonResult > 0) {
-                        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-                        val editor = sharedPreferences.edit()
-                        // 取得した結果の内一番新しいcreatedAtを保存する
-                        editor.putString("createdAt", createdAt)
-                        editor.apply()
-                        Log.d("debug", "modifiedAid = $createdAt")
-                    }
-                    else {
-                        Log.d("debug", "new notification nothing")
-                        break
-                    }
-
-                } catch (e: Exception) {
-                    Log.e("debug", "Failed to parse or modify the datetime", e)
+            val comparisonResult = instantApi.compareTo(instantDevcie )
+            if (comparisonResult > 0) {
+                val type = notification.optString("type")
+                val user = notification.optJSONObject("user")
+                val name = user?.optString("name")
+                val reaction = notification.optString("reaction")
+                when (type) {
+                    "follow"               -> sendNotification("${name}にフォローされました")
+                    "mention"              -> sendNotification("${name}メンションされました")
+                    "reply"                -> sendNotification("${name}リノートされました")
+                    "quote"                -> sendNotification("${name}引用されました")
+                    "reaction"             -> sendNotification("${name}から${reaction}されました")
+                    "receiveFollowRequest" -> sendNotification("${name}からフォロー申請されました")
+                    "allowFollowRequest"   -> sendNotification("${name}へのフォローが許可されました")
                 }
             }
-
-            val type = notification.optString("type")
-            val user = notification.optJSONObject("user")
-            val name = user?.optString("name")
-            val reaction = notification.optString("reaction")
-
-            when (type) {
-                "follow"               -> sendNotification("$name にフォローされました")
-                "mention"              -> sendNotification("$name にメンションされました")
-                "reply"                -> sendNotification("$name にリノートされました")
-                "quote"                -> sendNotification("$name に引用されました")
-                "reaction"             -> sendNotification("$name から$reaction されました")
-                "receiveFollowRequest" -> sendNotification("$name からフォロー申請されました")
-                "allowFollowRequest"   -> sendNotification("$name へのフォローが許可されました")
+            else {
+                break
             }
         }
+        // どうせ10件は通知取得するので、条件分岐せず最新のIdをとりあえず保存する設計にする
+        // sinceIdだとそもそも落っこちてこないのでもちろんこの手口は不可。
+        val tempolaryId = jsonArray.optJSONObject(0).optString("createdAt")
+        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("createdAt", tempolaryId)
+        editor.apply()
+
         Log.d("debug", "processNotifications[OUT]")
     }
 
