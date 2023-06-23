@@ -15,7 +15,13 @@ import android.webkit.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import java.io.File
+
+// TODO: マルチアカウントでのAPIキー管理やAPIキーの差し替えが出来ないので要対応。
+// TODO: マルチアカウントでの通知のON/OFF等対応したい
+// TODO: webview上で簡単な設定メニュー儲けたい
+// TODO: 入力されたAPIキーが有効かを軽く確認したい
+// TODO: sinceIdに対応したい、今はAPI引き出してアプリ内で判定してごまかしてる
+// TODO: 自分用のlogcat保存ライブラリを作る（優先度低）
 
 const val MISSKEY_URL      = "https://misskey.io"
 const val MISSKEY_DOMAIN   = "misskey.io"
@@ -23,7 +29,6 @@ const val MISSKEY_API_URL  = "https://misskey.io/api/i/notifications"
 class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     private val contenMenuId = 1001
     private var apiKey: String? = null
-    private val LOG_FILE_NAME = "logcat.txt"
     private lateinit var webView: WebView
     private lateinit var sharedPreferences: SharedPreferences
 
@@ -136,18 +141,6 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         val jobInfo = jobInfoBuilder.build()
         jobScheduler.schedule(jobInfo)
-    }
-
-    private fun getLogFilePath() {
-        // Android 10以降では外部ストレージの代わりにアプリ専用ディレクトリを使用する
-        val logDir = getExternalFilesDir(null)
-        logDir?.let {
-            if (!it.exists()) {
-                it.mkdir()
-            }
-            val logFile = File(logDir, LOG_FILE_NAME)
-            logFile.absolutePath
-        } ?: ""
     }
 
     override fun onDestroy() {

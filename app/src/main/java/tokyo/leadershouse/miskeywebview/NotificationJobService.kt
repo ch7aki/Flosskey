@@ -24,8 +24,10 @@ import java.time.Instant
 class NotificationJobService : JobService() {
     private lateinit var sharedPreferences: SharedPreferences
     companion object {
-        private const val JOB_ID_RANGE_START = 1000
-        private const val JOB_ID_RANGE_END   = 2000
+        private const val JOB_ID_RANGE_START        = 1000
+        private const val JOB_ID_RANGE_END          = 2000
+        private const val NOTIFICATION_CHANNEL_ID   = "misskey_notifications"
+        private const val NOTIFICATION_CHANNEL_NAME = "Misskey Notifications"
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
@@ -46,22 +48,19 @@ class NotificationJobService : JobService() {
 
     private fun fetchNotifications(apiKey: String) {
         Log.d("debug","fetchNotifications[IN]")
-
         val thread = Thread {
             val client = OkHttpClient()
             val url = MISSKEY_API_URL
+            // ぶっちゃけsinceIdを変換してハンドリングしたいが一旦はcreatedAtで通知判定する...
             val requestBody = JSONObject()
                 .put("i", apiKey)
-                // ぶっちゃけsinceIdを変換してハンドリングしたいが一旦はcreatedAtで通知判定する...
                 .put("limit", 100)
                 .toString()
                 .toRequestBody("application/json".toMediaType())
-
             val request = Request.Builder()
                 .url(url)
                 .post(requestBody)
                 .build()
-
             try {
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
@@ -77,65 +76,63 @@ class NotificationJobService : JobService() {
     private fun processNotifications(responseBody: String) {
         Log.d("debug", "processNotifications[IN]")
         val jsonArray = JSONArray(responseBody)
+        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        // 端末が既知の最新の通知のcratedAt
+        val instantDevice = Instant.parse(
+            sharedPreferences.getString(
+                "createdAt",
+                "2000-01-01T00:00:00.000Z"
+            ) ?: "")
         for (i in 0 until jsonArray.length()) {
             val notification = jsonArray.optJSONObject(i)
             val createdAt = notification.optString("createdAt")
             // API叩いて取得した通知のcratedAt
             val instantApi = Instant.parse(createdAt)
-            // 端末が既知の最新の通知のcratedAt
-            sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-            val instantDevcie = Instant.parse(
-                sharedPreferences.getString(
-                    "createdAt",
-                    "2000-01-01T00:00:00.000Z"
-                ) ?: "")
 
-            val comparisonResult = instantApi.compareTo(instantDevcie )
+            val comparisonResult = instantApi.compareTo(instantDevice )
             if (comparisonResult > 0) {
                 val type = notification.optString("type")
                 val user = notification.optJSONObject("user")
                 val name = user?.optString("name")
                 val reaction = notification.optString("reaction")
-                when (type) {
-                    "follow"               -> sendNotification("${name}にフォローされました")
-                    "mention"              -> sendNotification("${name}メンションされました")
-                    "reply"                -> sendNotification("${name}リノートされました")
-                    "quote"                -> sendNotification("${name}引用されました")
-                    "reaction"             -> sendNotification("${name}から${reaction}されました")
-                    "receiveFollowRequest" -> sendNotification("${name}からフォロー申請されました")
-                    "allowFollowRequest"   -> sendNotification("${name}へのフォローが許可されました")
+                val message = when (type) {
+                    "follow"               -> "${name}にフォローされました"
+                    "mention"              -> "${name}にメンションされました"
+                    "reply"                -> "${name}にリノートされました"
+                    "quote"                -> "${name}に引用されました"
+                    "reaction"             -> "${name}から${reaction}されました"
+                    "receiveFollowRequest" -> "${name}からフォロー申請されました"
+                    "allowFollowRequest"   -> "${name}へのフォローが許可されました"
+                    else -> continue // 今度対応
                 }
+                if (message.isNotEmpty()) { sendNotification(message) }
             }
-            else {
-                break
-            }
+            else { break }
         }
         // どうせ10件は通知取得するので、条件分岐せず最新のIdをとりあえず保存する設計にする
         // sinceIdだとそもそも落っこちてこないのでもちろんこの手口は不可。
+        // sinceIdで判定しないとAPIから毎回不要な通知も引っ張ってくる。。。
         val tempolaryId = jsonArray.optJSONObject(0).optString("createdAt")
         val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("createdAt", tempolaryId)
         editor.apply()
-
         Log.d("debug", "processNotifications[OUT]")
     }
 
     private fun sendNotification(message: String) {
         Log.d("debug","sendNotification[IN]")
-        val channelId = "misskey_notifications"
+        val channelId = NOTIFICATION_CHANNEL_ID
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.sym_def_app_icon)
-            .setContentTitle("Misskey Notification")
+            .setContentTitle(NOTIFICATION_CHANNEL_NAME)
             .setContentText(message)
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
-
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channel = NotificationChannel(channelId, "Misskey Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+        val channel = NotificationChannel(channelId, NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
         notificationManager.createNotificationChannel(channel)
-
         notificationManager.notify(0, notificationBuilder.build())
         Log.d("debug","sendNotification[OUT]")
     }
@@ -144,10 +141,10 @@ class NotificationJobService : JobService() {
         Log.d("debug","scheduleJob[IN]")
         val componentName = ComponentName(this, NotificationJobService::class.java)
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-        val jobId = (JOB_ID_RANGE_START..JOB_ID_RANGE_END).random() // 範囲内のランダムなジョブIDを生成
+        val jobId = (JOB_ID_RANGE_START..JOB_ID_RANGE_END).random()
         val jobInfo = JobInfo.Builder(jobId, componentName)
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPeriodic(0) // ここも10分だト思う
+            .setPeriodic(0)
             .build()
         jobScheduler.schedule(jobInfo)
         Log.d("debug","scheduleJob[OUT]")

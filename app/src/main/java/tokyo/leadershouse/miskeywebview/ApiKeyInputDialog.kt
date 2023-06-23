@@ -18,12 +18,12 @@ class ApiKeyInputDialog(
         this.listener = listener
     }
 
+    // マルチアカウントでのキー管理やキーの差し替えが出来ないので要対応。
     fun show() {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_api_key, null)
         val apiKeyEditText = dialogView.findViewById<EditText>(R.id.apiKeyEditText)
-
         val dialog = AlertDialog.Builder(context)
-            .setTitle("API Keyを入力してください")
+            .setTitle("APIキーを入力して下さい。")
             .setView(dialogView)
             .setPositiveButton("OK") { _, _ ->
                 val apiKey = apiKeyEditText.text.toString()
@@ -31,7 +31,6 @@ class ApiKeyInputDialog(
             }
             .setNegativeButton("また今度", null)
             .create()
-
         dialog.show()
     }
 }

@@ -27,10 +27,8 @@ class ImageDownloader(private val context: Context) {
                 connection.connect()
                 val input: InputStream = connection.inputStream
                 val bitmap = BitmapFactory.decodeStream(input)
-
                 // 画像の拡張子を取得
                 val fileExtension = getFileExtensionFromUrl(imageUrl)
-
                 // 画像を保存するためのファイルパスを生成
                 val currentTime = SimpleDateFormat("yyyyMMddHHmm", Locale.getDefault()).format(Date())
                 val filename = "$currentTime.$fileExtension"
@@ -38,16 +36,12 @@ class ImageDownloader(private val context: Context) {
                     Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_PICTURES),
                     "misskeywebview")
-                if (!directory.exists()) {
-                    directory.mkdirs()
-                }
+                if (!directory.exists()) { directory.mkdirs() }
                 val file = File(directory, filename)
-
                 val outputStream = FileOutputStream(file)
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
                 outputStream.flush()
                 outputStream.close()
-
                 // 画像の保存が完了したことをユーザーに通知する
                 (context as Activity).runOnUiThread {
                     Toast.makeText(context, "画像が保存されました", Toast.LENGTH_SHORT).show()

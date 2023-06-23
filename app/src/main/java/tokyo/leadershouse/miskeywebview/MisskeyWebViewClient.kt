@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClient() {
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
-
     private val script = """
             (function() {
                 var imgs = document.querySelectorAll('.pswp__img');
@@ -82,10 +81,8 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
                 return true
             }
         }
-
         script.trimIndent()
         webView.evaluateJavascript(script,null)
-
         // 余計な機能は無効にしておく
         webView.settings.allowContentAccess  = false
         webView.settings.allowFileAccess     = false
@@ -93,7 +90,6 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
         webView.settings.databaseEnabled     = false
         webView.settings.displayZoomControls = false
         webView.settings.setGeolocationEnabled(false)
-
         // CookieManagerの設定
         CookieHandler(context).manageCookie()
     }
@@ -107,11 +103,9 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
 
     private fun onActivityResult(data: Intent?) {
             data?.let { intent ->
-                val result = if (intent.data != null) {
-                    arrayOf(intent.data!!)
-                } else {
-                    null
-                }
+                val result =
+                    if (intent.data != null) { arrayOf(intent.data!!) }
+                    else { null }
                 fileUploadCallback?.onReceiveValue(result)
                 fileUploadCallback = null
             }

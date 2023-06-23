@@ -8,9 +8,7 @@ class CookieHandler(private val context: Context) {
     fun loadCookies() {
         val sharedPreferences = context.getSharedPreferences("Cookies", Context.MODE_PRIVATE)
         val savedCookies = sharedPreferences.getString("cookies", null)
-
         savedCookies?.let {
-            // 保存したいドメインを指定する
             cookieManager.setCookie(MISSKEY_URL, it)
         }
     }
