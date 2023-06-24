@@ -2,12 +2,14 @@ package tokyo.leadershouse.miskeywebview
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.job.JobInfo
 import android.app.job.JobParameters
 import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.media.RingtoneManager
 import android.util.Log
@@ -23,6 +25,7 @@ import java.time.Instant
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
     private lateinit var sharedPreferences: SharedPreferences
+    private var notificationId = 0 // 通知IDを保持する変数
     companion object {
         private const val JOB_ID_RANGE_START        = 1000
         private const val JOB_ID_RANGE_END          = 2000
@@ -124,16 +127,26 @@ class NotificationJobService : JobService() {
         Log.d("debug","sendNotification[IN]")
         val channelId = NOTIFICATION_CHANNEL_ID
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        // アプリを開くためのIntentを作成
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.sym_def_app_icon)
             .setContentTitle(NOTIFICATION_CHANNEL_NAME)
             .setContentText(message)
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
+            .setContentIntent(pendingIntent) // PendingIntentを設定
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channel = NotificationChannel(channelId, NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
         notificationManager.createNotificationChannel(channel)
-        notificationManager.notify(0, notificationBuilder.build())
+        notificationManager.notify(notificationId++, notificationBuilder.build())
         Log.d("debug","sendNotification[OUT]")
     }
 
