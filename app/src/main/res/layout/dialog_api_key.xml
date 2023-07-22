@@ -5,12 +5,10 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="APIキーを入力してください" />
-
     <EditText
         android:id="@+id/apiKeyEditText"
         android:layout_width="match_parent"
@@ -18,5 +16,4 @@
         android:inputType="text"
         android:autofillHints=""
         tools:ignore="LabelFor" />
-
 </LinearLayout>

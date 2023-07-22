@@ -1,5 +1,4 @@
 package tokyo.leadershouse.miskeywebview
-
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.widget.Toast

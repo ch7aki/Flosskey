@@ -1,5 +1,4 @@
 package tokyo.leadershouse.miskeywebview
-
 import android.app.AlertDialog
 import android.content.Context
 import android.view.LayoutInflater

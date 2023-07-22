@@ -91,7 +91,6 @@ class NotificationJobService : JobService() {
             val createdAt = notification.optString("createdAt")
             // API叩いて取得した通知のcratedAt
             val instantApi = Instant.parse(createdAt)
-
             val comparisonResult = instantApi.compareTo(instantDevice )
             if (comparisonResult > 0) {
                 val type = notification.optString("type")

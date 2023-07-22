@@ -45,16 +45,15 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                     val builder = AlertDialog.Builder(this@MainActivity)
-                    if (webView.canGoBack()) {
-                        webView.goBack() // WebView内のページを1つ戻す
-                    } else {
+                    if (webView.canGoBack()) { webView.goBack() } // WebView内のページを1つ戻す
+                    else {
                         builder.setMessage("アプリを終了しますか？")
                         builder.setPositiveButton("いいえ") { dialog, _ -> dialog.dismiss() }
                         builder.setNegativeButton("はい") { _, _ -> finish() }
                         builder.show()
                     }
-                }
             }
+        }
         this.onBackPressedDispatcher.addCallback(this, callback)
         // Cookie
         CookieHandler(this).loadCookies()
@@ -98,9 +97,7 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     }
 
     // ダイアログからのコールバック
-    override fun onApiKeyEntered(apiKey: String) {
-        saveApiKey(apiKey)
-    }
+    override fun onApiKeyEntered(apiKey: String) { saveApiKey(apiKey) }
 
     // ダイアログ表示
     private fun showApiKeyInputDialog() {
@@ -128,16 +125,12 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         Log.d("debug", "apiKey:$apiKey で通知取得開始")
         val componentName = ComponentName(this, NotificationJobService::class.java)
         val jobId = 1001
-
         val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
             .setPeriodic(0) // おそらくAndroid13は最小間隔が10分
-
         val extras = PersistableBundle()
         extras.putString("apiKey", apiKey)
-
         jobInfoBuilder.setExtras(extras)
-
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         val jobInfo = jobInfoBuilder.build()
         jobScheduler.schedule(jobInfo)

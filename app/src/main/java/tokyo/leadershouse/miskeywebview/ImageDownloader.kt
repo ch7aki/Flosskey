@@ -1,5 +1,4 @@
 package tokyo.leadershouse.miskeywebview
-
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
@@ -27,7 +26,6 @@ class ImageDownloader(private val context: Context) {
                 connection.connect()
                 val input: InputStream = connection.inputStream
                 val bitmap = BitmapFactory.decodeStream(input)
-                // 画像の拡張子を取得
                 val fileExtension = getFileExtensionFromUrl(imageUrl)
                 // 画像を保存するためのファイルパスを生成
                 val currentTime = SimpleDateFormat("yyyyMMddHHmm", Locale.getDefault()).format(Date())
@@ -42,13 +40,11 @@ class ImageDownloader(private val context: Context) {
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
                 outputStream.flush()
                 outputStream.close()
-                // 画像の保存が完了したことをユーザーに通知する
                 (context as Activity).runOnUiThread {
                     Toast.makeText(context, "画像が保存されました", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
-                // 画像の保存が失敗したことをユーザーに通知する
                 (context as Activity).runOnUiThread {
                     Toast.makeText(context, "画像の保存に失敗しました", Toast.LENGTH_SHORT).show()
                 }

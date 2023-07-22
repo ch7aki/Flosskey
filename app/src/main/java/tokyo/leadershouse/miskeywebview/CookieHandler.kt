@@ -1,5 +1,4 @@
 package tokyo.leadershouse.miskeywebview
-
 import android.content.Context
 import android.webkit.CookieManager
 
@@ -8,9 +7,7 @@ class CookieHandler(private val context: Context) {
     fun loadCookies() {
         val sharedPreferences = context.getSharedPreferences("Cookies", Context.MODE_PRIVATE)
         val savedCookies = sharedPreferences.getString("cookies", null)
-        savedCookies?.let {
-            cookieManager.setCookie(MISSKEY_URL, it)
-        }
+        savedCookies?.let { cookieManager.setCookie(MISSKEY_URL, it) }
     }
 
     fun saveCookies() {
