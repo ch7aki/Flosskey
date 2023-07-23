@@ -1,8 +1,10 @@
 package tokyo.leadershouse.miskeywebview
+import android.annotation.SuppressLint
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
@@ -12,9 +14,11 @@ import android.view.ContextMenu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.*
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.drawerlayout.widget.DrawerLayout
 
 // TODO: マルチアカウントでのAPIキー管理やAPIキーの差し替えが出来ないので要対応。
 // TODO: マルチアカウントでの通知のON/OFF等対応したい
@@ -31,7 +35,9 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
     private var apiKey: String? = null
     private lateinit var webView: WebView
     private lateinit var sharedPreferences: SharedPreferences
+    private var sidebarOpen = false
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -41,6 +47,46 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         // 外観変更
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
+
+        // サイドバー設定
+        val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
+
+        // サイドバーの開閉状態を監視し、WebViewに対するタッチイベントを遮断する
+        drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+                // 何もしない
+            }
+
+            override fun onDrawerOpened(drawerView: View) {
+                sidebarOpen = true
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                sidebarOpen = false
+            }
+
+            override fun onDrawerStateChanged(newState: Int) {
+                // 何もしない
+            }
+        })
+
+        // WebViewの下に重なる透明なViewのクリックイベントリスナーを設定
+        val touchInterceptor = findViewById<View>(R.id.touchInterceptor)
+        touchInterceptor.setOnTouchListener { _, event ->
+            // サイドバーの開閉状態に合わせてwebviewへのタップを遮断
+            if (sidebarOpen) { true }
+            else { webView.dispatchTouchEvent(event) }
+        }
+
+        // サイドバーの項目をクリックしたときの処理
+        val apiKeyItem = findViewById<TextView>(R.id.apiKeyItem)
+        apiKeyItem.setOnClickListener {
+            val intent = Intent(this, AccountListActivity::class.java)
+            startActivity(intent)
+        }
+
+        //
+
         // 戻るボタン制御
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -64,6 +110,16 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         webView = findViewById(R.id.webView)
         registerForContextMenu(webView)
         MisskeyWebViewClient(this).initializeWebView(webView)
+    }
+
+    private fun showApiKeyDialog() {
+        // ここにAPIキーの情報を表示するダイアログを実装するコードを追加
+        // 例えば、AlertDialogを使用してダイアログを表示する場合：
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("APIキーの情報")
+            .setMessage("ここにAPIキーの情報を表示")
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 
     // 長押しメニュー作成処理
