@@ -5,7 +5,6 @@ import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -20,9 +19,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
 
-// TODO: マルチアカウントでのAPIキー管理やAPIキーの差し替えが出来ないので要対応。
-// TODO: マルチアカウントでの通知のON/OFF等対応したい
-// TODO: webview上で簡単な設定メニュー儲けたい
 // TODO: 入力されたAPIキーが有効かを軽く確認したい
 // TODO: sinceIdに対応したい、今はAPI引き出してアプリ内で判定してごまかしてる
 // TODO: 自分用のlogcat保存ライブラリを作る（優先度低）
@@ -30,77 +26,23 @@ import androidx.drawerlayout.widget.DrawerLayout
 const val MISSKEY_URL      = "https://misskey.io"
 const val MISSKEY_DOMAIN   = "misskey.io"
 const val MISSKEY_API_URL  = "https://misskey.io/api/i/notifications"
-class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
-    private val contenMenuId = 1001
-    private var apiKey: String? = null
-    private lateinit var webView: WebView
-    private lateinit var sharedPreferences: SharedPreferences
+class MainActivity : AppCompatActivity() {
+    private var contenMenuId = 1001
     private var sidebarOpen = false
+    private lateinit var webView: WebView
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        // APIキーチェック
-        if (!checkApi()){ showApiKeyInputDialog() }
-        else { startBackgroundJob() }
-        // 外観変更
-        window.statusBarColor = Color.BLACK
-        supportActionBar?.hide()
 
+        // 登録済みのAPIキーを使って通知ジョブ実行
+        checkApi()
         // サイドバー設定
-        val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
+        setSideBar()
+        // 外観と細かい設定
+        configureAppUI()
 
-        // サイドバーの開閉状態を監視し、WebViewに対するタッチイベントを遮断する
-        drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
-            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-                // 何もしない
-            }
-
-            override fun onDrawerOpened(drawerView: View) {
-                sidebarOpen = true
-            }
-
-            override fun onDrawerClosed(drawerView: View) {
-                sidebarOpen = false
-            }
-
-            override fun onDrawerStateChanged(newState: Int) {
-                // 何もしない
-            }
-        })
-
-        // WebViewの下に重なる透明なViewのクリックイベントリスナーを設定
-        val touchInterceptor = findViewById<View>(R.id.touchInterceptor)
-        touchInterceptor.setOnTouchListener { _, event ->
-            // サイドバーの開閉状態に合わせてwebviewへのタップを遮断
-            if (sidebarOpen) { true }
-            else { webView.dispatchTouchEvent(event) }
-        }
-
-        // サイドバーの項目をクリックしたときの処理
-        val apiKeyItem = findViewById<TextView>(R.id.apiKeyItem)
-        apiKeyItem.setOnClickListener {
-            val intent = Intent(this, AccountListActivity::class.java)
-            startActivity(intent)
-        }
-
-        //
-
-        // 戻るボタン制御
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                    val builder = AlertDialog.Builder(this@MainActivity)
-                    if (webView.canGoBack()) { webView.goBack() } // WebView内のページを1つ戻す
-                    else {
-                        builder.setMessage("アプリを終了しますか？")
-                        builder.setPositiveButton("いいえ") { dialog, _ -> dialog.dismiss() }
-                        builder.setNegativeButton("はい") { _, _ -> finish() }
-                        builder.show()
-                    }
-            }
-        }
-        this.onBackPressedDispatcher.addCallback(this, callback)
         // Cookie
         CookieHandler(this).loadCookies()
         // 権限処理
@@ -112,14 +54,84 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
         MisskeyWebViewClient(this).initializeWebView(webView)
     }
 
-    private fun showApiKeyDialog() {
-        // ここにAPIキーの情報を表示するダイアログを実装するコードを追加
-        // 例えば、AlertDialogを使用してダイアログを表示する場合：
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("APIキーの情報")
-            .setMessage("ここにAPIキーの情報を表示")
-            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-            .show()
+    // 登録済みのAPIキーを使って通知ジョブ実行
+    private fun checkApi() {
+        val sharedPreferences = getSharedPreferences("AccountInfo", Context.MODE_PRIVATE)
+        val accountCount = sharedPreferences.getInt("accountCount", 0)
+        if (accountCount > 1) {
+            // 1番目には追加用の要素があるから1から数え上げる
+            for (i in 1 until accountCount) {
+                val apiKey = sharedPreferences.getString("apiKey_$i", "") ?: ""
+                startBackgroundJob(apiKey)
+            }
+        }
+    }
+
+    // サイドバー設定
+    private fun setSideBar(){
+        val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
+        // サイドバーの開閉状態を監視し、WebViewに対するタッチイベントを遮断する
+        drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
+            override fun onDrawerStateChanged(newState: Int) {}
+            override fun onDrawerOpened(drawerView: View) { sidebarOpen = true }
+            override fun onDrawerClosed(drawerView: View) { sidebarOpen = false }
+        })
+
+        // WebViewの下に重なる透明なViewのクリックイベントリスナーを設定
+        val touchInterceptor = findViewById<View>(R.id.touchInterceptor)
+        touchInterceptor.setOnTouchListener { _, event ->
+            // サイドバーの開閉状態に合わせてwebviewへのタップを遮断
+            if (sidebarOpen) { true }
+            else {
+                webView.dispatchTouchEvent(event)
+                touchInterceptor.performClick() // クリックイベントも発生させる
+            }
+        }
+
+        // サイドバーの項目をクリックしたときの処理
+        val apiKeyItem = findViewById<TextView>(R.id.apiKeyItem)
+        apiKeyItem.setOnClickListener {
+            val intent = Intent(this, AccountListActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    // 外観と細かい設定
+    private fun configureAppUI() {
+        window.statusBarColor = Color.BLACK
+        supportActionBar?.hide()
+
+        // 戻るボタン制御
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val builder = AlertDialog.Builder(this@MainActivity)
+                if (webView.canGoBack()) { webView.goBack() } // WebView内のページを1つ戻す
+                else {
+                    builder.setMessage("アプリを終了しますか？")
+                    builder.setPositiveButton("いいえ") { dialog, _ -> dialog.dismiss() }
+                    builder.setNegativeButton("はい") { _, _ -> finish() }
+                    builder.show()
+                }
+            }
+        }
+        this.onBackPressedDispatcher.addCallback(this, callback)
+    }
+    
+    // バックグラウンドサービス実行
+    private fun startBackgroundJob(apiKey: String) {
+        Log.d("debug", "apiKey:$apiKey で通知取得開始")
+        val componentName = ComponentName(this, NotificationJobService::class.java)
+        val jobId = contenMenuId++
+        val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .setPeriodic(0) // おそらくAndroid13は最小間隔が10分
+        val extras = PersistableBundle()
+        extras.putString("apiKey", apiKey)
+        jobInfoBuilder.setExtras(extras)
+        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        val jobInfo = jobInfoBuilder.build()
+        jobScheduler.schedule(jobInfo)
     }
 
     // 長押しメニュー作成処理
@@ -150,46 +162,6 @@ class MainActivity : AppCompatActivity(), ApiKeyInputDialog.ApiKeyListener {
             }
             else -> super.onContextItemSelected(item)
         }
-    }
-
-    // ダイアログからのコールバック
-    override fun onApiKeyEntered(apiKey: String) { saveApiKey(apiKey) }
-
-    // ダイアログ表示
-    private fun showApiKeyInputDialog() {
-        val apiKeyInputDialog = ApiKeyInputDialog(this)
-        apiKeyInputDialog.setApiKeyListener(this) // リスナーをセット
-        apiKeyInputDialog.show()
-    }
-
-    // API保存
-    private fun saveApiKey(apiKey: String) {
-        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("api_key", apiKey)
-        editor.apply()
-    }
-
-    private fun checkApi() : Boolean{
-        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        apiKey = sharedPreferences.getString("api_key", "") ?: ""
-        return apiKey!!.isNotEmpty()
-    }
-
-    // バックグラウンドサービス実行
-    private fun startBackgroundJob() {
-        Log.d("debug", "apiKey:$apiKey で通知取得開始")
-        val componentName = ComponentName(this, NotificationJobService::class.java)
-        val jobId = 1001
-        val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPeriodic(0) // おそらくAndroid13は最小間隔が10分
-        val extras = PersistableBundle()
-        extras.putString("apiKey", apiKey)
-        jobInfoBuilder.setExtras(extras)
-        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-        val jobInfo = jobInfoBuilder.build()
-        jobScheduler.schedule(jobInfo)
     }
 
     override fun onDestroy() {

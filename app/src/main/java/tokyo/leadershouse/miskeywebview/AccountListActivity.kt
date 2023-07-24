@@ -62,7 +62,7 @@ class AccountListActivity : AppCompatActivity() {
             val accountInfo = accountList[position]
 
             if (accountInfo.accountName != "APIキー追加") {
-                showUpdateAccountDialog(accountInfo)
+                showDeleteOrEditDialog(accountInfo)
             }
 
             true
@@ -136,6 +136,50 @@ class AccountListActivity : AppCompatActivity() {
         }
         editor.apply()
     }
+    private fun showDeleteOrEditDialog(accountInfo: AccountInfo) {
+        val options = arrayOf("編集", "削除")
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("選択してください")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showUpdateAccountDialog(accountInfo) // 編集の選択
+                    1 -> deleteAccount(accountInfo) // 削除の選択
+                }
+            }
+            .setNegativeButton("キャンセル") { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+    private fun deleteAccount(accountInfo: AccountInfo) {
+        // アカウント情報の削除処理を実装
+        // 例えば、以下のようにしてリストから該当のアカウント情報を削除できる
+        accountList.remove(accountInfo)
+        accountAdapter.notifyDataSetChanged()
+        // SharedPreferencesからアカウント情報を取得し、該当のアカウント情報を削除する
+        val sharedPreferences = getSharedPreferences("AccountInfo", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val accountCount = sharedPreferences.getInt("accountCount", 0)
+        for (i in 1 until accountCount) {
+            val accountName = sharedPreferences.getString("accountName_$i", "")
+            if (accountName == accountInfo.accountName) {
+                // 該当のアカウント情報を削除
+                editor.remove("accountName_$i")
+                editor.remove("apiKey_$i")
+                // 他のアカウント情報をシフトする
+                for (j in i + 1 until accountCount) {
+                    val name = sharedPreferences.getString("accountName_$j", "")
+                    val key = sharedPreferences.getString("apiKey_$j", "")
+                    editor.putString("accountName_${j - 1}", name)
+                    editor.putString("apiKey_${j - 1}", key)
+                }
+                // accountCountを1つ減らす
+                editor.putInt("accountCount", accountCount - 1)
+                editor.apply()
+                break
+            }
+        }
+    }
+
     override fun onDestroy() {
         saveAccountInfo()
         super.onDestroy()
