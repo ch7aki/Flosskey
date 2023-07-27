@@ -4,18 +4,16 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ListView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 
 data class AccountInfo(var accountName: String, var apiKey: String)
-
 class AccountListActivity : AppCompatActivity() {
 
-    private lateinit var accountListView: ListView
     private val accountList = mutableListOf<AccountInfo>()
+    private lateinit var accountListView: ListView
     private lateinit var accountAdapter: AccountAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,79 +44,61 @@ class AccountListActivity : AppCompatActivity() {
         // アダプターをセット
         accountAdapter = AccountAdapter(this, accountList)
         accountListView.adapter = accountAdapter
-
         accountListView.setOnItemClickListener { _, _, position, _ ->
             val accountInfo = accountList[position]
-
             if (accountInfo.accountName == "APIキー追加") {
-                showAddAccountDialog()
-            } else {
-                // 通常の処理（アカウント情報を表示）を行う
+                showHandleAccountDialog(true, accountInfo)
             }
         }
 
         // ロングタップで情報を更新
         accountListView.setOnItemLongClickListener { _, _, position, _ ->
             val accountInfo = accountList[position]
-
             if (accountInfo.accountName != "APIキー追加") {
                 showDeleteOrEditDialog(accountInfo)
             }
-
             true
         }
     }
 
-    private fun showUpdateAccountDialog(accountInfo: AccountInfo) {
+    // 「アカウントとAPIキーを登録」のダイアログを表示する関数
+    private fun showHandleAccountDialog(isAdd: Boolean, accountInfo: AccountInfo) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_account, null)
         val accountEditText = dialogView.findViewById<EditText>(R.id.accountEditText)
         val apiKeyEditText = dialogView.findViewById<EditText>(R.id.apiKeyEditText)
-
-        // ダイアログに既存のアカウント情報をセット
-        accountEditText.setText(accountInfo.accountName)
-        apiKeyEditText.setText(accountInfo.apiKey)
-
-        AlertDialog.Builder(this)
-            .setTitle("アカウントとAPIキーを更新")
-            .setView(dialogView)
-            .setPositiveButton("OK") { _, _ ->
+        val dialogBuilder = AlertDialog.Builder(this)
+        if (isAdd) {
+            // アカウント追加用のダイアログ
+            dialogBuilder.setTitle("アカウントとAPIキーを追加")
+            dialogBuilder.setView(dialogView)
+            dialogBuilder.setPositiveButton("OK") { _, _ ->
+                // OKボタンが押されたときの処理
+                val account = accountEditText.text.toString()
+                val apiKey  = apiKeyEditText.text.toString()
+                // 入力されたアカウントとAPIキーをリストに追加
+                accountList.add(AccountInfo(account, apiKey))
+                accountAdapter.notifyDataSetChanged()
+                // 新しいアカウント情報を保存
+                saveAccountInfo()
+            }
+        } else {
+            // 既存のアカウント情報を編集するダイアログ
+            dialogBuilder.setTitle("アカウントとAPIキーを更新")
+            dialogBuilder.setView(dialogView)
+            // ダイアログに既存のアカウント情報をセット
+            accountEditText.setText(accountInfo.accountName)
+            apiKeyEditText.setText(accountInfo.apiKey)
+            dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // 更新ボタンが押された場合の処理
                 val updatedAccount = accountEditText.text.toString()
                 val updatedApiKey = apiKeyEditText.text.toString()
-
                 // リストビューのアイテムを更新
                 accountInfo.accountName = updatedAccount
                 accountInfo.apiKey = updatedApiKey
             }
-            .setNegativeButton("キャンセル", null)
-            .show()
-    }
-
-    // 「アカウントとAPIキーを登録」のダイアログを表示する関数
-    private fun showAddAccountDialog() {
-        val dialogBuilder = AlertDialog.Builder(this)
-        val inflater = layoutInflater
-        val dialogView = inflater.inflate(R.layout.dialog_add_account, null)
-        dialogBuilder.setView(dialogView)
-
-        val accountEditText = dialogView.findViewById<EditText>(R.id.accountEditText)
-        val apiKeyEditText = dialogView.findViewById<EditText>(R.id.apiKeyEditText)
-
-        dialogBuilder.setPositiveButton("OK") { _, _ ->
-            // OKボタンが押されたときの処理
-            val account = accountEditText.text.toString()
-            val apiKey = apiKeyEditText.text.toString()
-            // 入力されたアカウントとAPIキーをリストに追加
-            accountList.add(AccountInfo(account, apiKey))
-            // リストビューを更新
-            (accountListView.adapter as ArrayAdapter<*>).notifyDataSetChanged()
-
-            // 新しいアカウント情報を保存
-            saveAccountInfo()
         }
         dialogBuilder.setNegativeButton("キャンセル", null)
-        val alertDialog = dialogBuilder.create()
-        alertDialog.show()
+        dialogBuilder.show()
     }
 
     private fun saveAccountInfo() {
@@ -127,7 +107,6 @@ class AccountListActivity : AppCompatActivity() {
         editor.clear()
         editor.putInt("accountCount", accountList.size)
         Log.d("debug", "accountList.size = " + accountList.size.toString())
-
         for (i in accountList.indices) {
             editor.putString("accountName_$i", accountList[i].accountName)
             Log.d("debug",accountList[i].accountName)
@@ -139,10 +118,9 @@ class AccountListActivity : AppCompatActivity() {
     private fun showDeleteOrEditDialog(accountInfo: AccountInfo) {
         val options = arrayOf("編集", "削除")
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("選択してください")
-            .setItems(options) { _, which ->
+        builder.setItems(options) { _, which ->
                 when (which) {
-                    0 -> showUpdateAccountDialog(accountInfo) // 編集の選択
+                    0 -> showHandleAccountDialog(false, accountInfo) // 編集の選択
                     1 -> deleteAccount(accountInfo) // 削除の選択
                 }
             }
@@ -152,7 +130,6 @@ class AccountListActivity : AppCompatActivity() {
 
     private fun deleteAccount(accountInfo: AccountInfo) {
         // アカウント情報の削除処理を実装
-        // 例えば、以下のようにしてリストから該当のアカウント情報を削除できる
         accountList.remove(accountInfo)
         accountAdapter.notifyDataSetChanged()
         // SharedPreferencesからアカウント情報を取得し、該当のアカウント情報を削除する

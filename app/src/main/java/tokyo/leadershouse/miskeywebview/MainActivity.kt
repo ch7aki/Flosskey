@@ -35,14 +35,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         // 登録済みのAPIキーを使って通知ジョブ実行
         checkApi()
         // サイドバー設定
         setSideBar()
         // 外観と細かい設定
         configureAppUI()
-
         // Cookie
         CookieHandler(this).loadCookies()
         // 権限処理
@@ -101,7 +99,6 @@ class MainActivity : AppCompatActivity() {
     private fun configureAppUI() {
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
-
         // 戻るボタン制御
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -117,7 +114,6 @@ class MainActivity : AppCompatActivity() {
         }
         this.onBackPressedDispatcher.addCallback(this, callback)
     }
-    
     // バックグラウンドサービス実行
     private fun startBackgroundJob(apiKey: String) {
         Log.d("debug", "apiKey:$apiKey で通知取得開始")

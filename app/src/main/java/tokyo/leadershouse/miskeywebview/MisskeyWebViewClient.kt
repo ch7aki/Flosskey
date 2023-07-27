@@ -83,7 +83,7 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
         }
         script.trimIndent()
         webView.evaluateJavascript(script,null)
-        // 余計な機能は無効にしておく
+        // セキュリティ意識
         webView.settings.allowContentAccess  = false
         webView.settings.allowFileAccess     = false
         webView.settings.builtInZoomControls = false
