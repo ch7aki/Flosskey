@@ -27,8 +27,8 @@ class NotificationJobService : JobService() {
     private lateinit var sharedPreferences: SharedPreferences
     private var notificationId = 0 // 通知IDを保持する変数
     companion object {
-        private const val JOB_ID_RANGE_START        = 1000
-        private const val JOB_ID_RANGE_END          = 2000
+        private const val JOB_ID_RANGE_START        = 2000
+        private const val JOB_ID_RANGE_END          = 3000
         private const val NOTIFICATION_CHANNEL_ID   = "misskey_notifications"
         private const val NOTIFICATION_CHANNEL_NAME = "Misskey Notifications"
     }

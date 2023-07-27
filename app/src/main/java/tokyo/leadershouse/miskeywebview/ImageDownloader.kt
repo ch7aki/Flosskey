@@ -17,6 +17,7 @@ import java.util.Date
 import java.util.Locale
 
 class ImageDownloader(private val context: Context) {
+    // 画像保存
     fun saveImage(imageUrl: String) {
         Thread {
             try {
@@ -51,7 +52,7 @@ class ImageDownloader(private val context: Context) {
             }
         }.start()
     }
-
+    // 画像をURLから取得
     private fun getFileExtensionFromUrl(url: String): String {
         val fileUrl = URL(url)
         val path = fileUrl.path

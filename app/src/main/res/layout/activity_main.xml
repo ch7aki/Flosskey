@@ -1,11 +1,50 @@
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
-    <WebView
-        android:id="@+id/webView"
+    android:layout_height="match_parent">
+
+    <!-- WebViewを画面いっぱいに表示 -->
+    <FrameLayout
+        android:id="@+id/webViewContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_height="match_parent">
+
+        <WebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- WebViewの下に重なる透明なView -->
+        <View
+            android:id="@+id/touchInterceptor"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clickable="true" />
+
+    </FrameLayout>
+
+    <!-- サイドバー用のレイアウト -->
+    <LinearLayout
+        android:id="@+id/sidebar"
+        android:layout_width="260dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@android:color/black"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- サイドバーの項目 -->
+        <TextView
+            android:id="@+id/apiKeyItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="APIキーの管理"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:gravity="center_vertical" />
+
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>
