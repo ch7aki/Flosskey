@@ -12,9 +12,11 @@ class AccountAdapter(context: Context, private val accountList: List<AccountInfo
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.list_item_account, parent, false)
         val accountInfo = accountList[position]
         val accountNameTextView = view.findViewById<TextView>(R.id.accountNameTextView)
+        val instanceTextView = view.findViewById<TextView>(R.id.instanceTextView)
         val apiKeyTextView = view.findViewById<TextView>(R.id.apiKeyTextView)
         accountNameTextView.text = accountInfo.accountName
-        apiKeyTextView.text = accountInfo.apiKey
+        instanceTextView.text    = accountInfo.instanceName
+        apiKeyTextView.text      = accountInfo.apiKey
         return view
     }
 }

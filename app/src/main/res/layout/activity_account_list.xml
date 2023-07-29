@@ -2,11 +2,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-
-    <!-- ここにアカウント情報のリストが表示されます -->
     <ListView
         android:id="@+id/accountListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
 </LinearLayout>
