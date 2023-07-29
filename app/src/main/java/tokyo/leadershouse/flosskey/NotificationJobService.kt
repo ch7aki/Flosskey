@@ -1,4 +1,4 @@
-package tokyo.leadershouse.miskeywebview
+package tokyo.leadershouse.flosskey
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -29,8 +29,8 @@ class NotificationJobService : JobService() {
     companion object {
         private const val JOB_ID_RANGE_START        = 2000
         private const val JOB_ID_RANGE_END          = 3000
-        private const val NOTIFICATION_CHANNEL_ID   = "misskey_notifications"
-        private const val NOTIFICATION_CHANNEL_NAME = "Misskey Notifications"
+        private const val NOTIFICATION_CHANNEL_ID   = "flosskey_notifications"
+        private const val NOTIFICATION_CHANNEL_NAME = "Flosskey Notifications"
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
@@ -111,9 +111,6 @@ class NotificationJobService : JobService() {
             }
             else { break }
         }
-        // どうせ10件は通知取得するので、条件分岐せず最新のIdをとりあえず保存する設計にする
-        // sinceIdだとそもそも落っこちてこないのでもちろんこの手口は不可。
-        // sinceIdで判定しないとAPIから毎回不要な通知も引っ張ってくる。。。
         val tempolaryId = jsonArray.optJSONObject(0).optString("createdAt")
         val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
@@ -160,5 +157,10 @@ class NotificationJobService : JobService() {
             .build()
         jobScheduler.schedule(jobInfo)
         Log.d("debug","scheduleJob[OUT]")
+    }
+
+    fun cancelAllJobs() {
+        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        jobScheduler.cancelAll()
     }
 }

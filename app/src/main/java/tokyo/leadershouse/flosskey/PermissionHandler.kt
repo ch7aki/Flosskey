@@ -1,4 +1,4 @@
-package tokyo.leadershouse.miskeywebview
+package tokyo.leadershouse.flosskey
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.widget.Toast

@@ -1,4 +1,4 @@
-package tokyo.leadershouse.miskeywebview
+package tokyo.leadershouse.flosskey
 
 import org.junit.Test
 

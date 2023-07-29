@@ -1,4 +1,4 @@
-package tokyo.leadershouse.miskeywebview
+package tokyo.leadershouse.flosskey
 import android.annotation.SuppressLint
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
@@ -21,7 +21,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 
 // TODO: 入力されたAPIキーが有効かを軽く確認したい
 // TODO: sinceIdに対応したい、今はAPI引き出してアプリ内で判定してごまかしてる
-// TODO: 自分用のlogcat保存ライブラリを作る（優先度低）
 
 const val MISSKEY_URL      = "https://misskey.io"
 const val MISSKEY_DOMAIN   = "misskey.io"
@@ -44,8 +43,7 @@ class MainActivity : AppCompatActivity() {
         // Cookie
         CookieHandler(this).loadCookies()
         // 権限処理
-        val permissionHandler = PermissionHandler(this)
-        permissionHandler.requestPermission()
+        PermissionHandler(this).requestPermission()
         // webview初期化
         webView = findViewById(R.id.webView)
         registerForContextMenu(webView)
@@ -116,7 +114,7 @@ class MainActivity : AppCompatActivity() {
     }
     // バックグラウンドサービス実行
     private fun startBackgroundJob(apiKey: String) {
-        Log.d("debug", "apiKey:$apiKey で通知取得開始")
+        Log.d("debug", "apiKey:${apiKey}で通知取得開始")
         val componentName = ComponentName(this, NotificationJobService::class.java)
         val jobId = contenMenuId++
         val jobInfoBuilder = JobInfo.Builder(jobId, componentName)

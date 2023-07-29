@@ -1,4 +1,4 @@
-package tokyo.leadershouse.miskeywebview
+package tokyo.leadershouse.flosskey
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
