@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("tokyo.leadershouse.miskeywebview", appContext.packageName)
+        assertEquals("tokyo.leadershouse.flosskey", appContext.packageName)
     }
 }
