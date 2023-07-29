@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
@@ -71,13 +72,20 @@ class MainActivity : AppCompatActivity() {
     private fun setSideBar() {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
         val sidebarListView = findViewById<ListView>(R.id.sidebar)
-        val sidebarItems = arrayOf("APIキーの管理", "WebViewを更新")
+        val sidebarItems = arrayOf(
+            "APIキーの管理",
+            "WebViewを更新",
+            "ch1ak1@misskey.io",
+            "ソースコード"
+        )
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, sidebarItems)
         sidebarListView.adapter = adapter
         sidebarListView.setOnItemClickListener { _, _, position, _ ->
             when (position) {
                 0 -> { startActivity(Intent(this, AccountListActivity::class.java)) }
                 1 -> { webView.loadUrl(getMisskeyUrl()) }
+                2 -> { webView.loadUrl("https://misskey.io/@ch1ak1") }
+                3 -> { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ch1ak1STR/Flosskey"))) }
             }
         }
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {

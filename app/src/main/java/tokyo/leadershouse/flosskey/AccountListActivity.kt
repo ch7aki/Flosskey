@@ -59,7 +59,7 @@ class AccountListActivity : AppCompatActivity() {
         val dialogBuilder    = AlertDialog.Builder(this)
         if (isAdd) {
             // アカウント追加用のダイアログ
-            dialogBuilder.setTitle("アカウントとAPIキーを追加")
+            dialogBuilder.setTitle("ユーザ情報の追加")
             dialogBuilder.setView(dialogView)
             dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // OKボタンが押されたときの処理
@@ -74,7 +74,7 @@ class AccountListActivity : AppCompatActivity() {
             }
         } else {
             // 編集用のダイアログ
-            dialogBuilder.setTitle("アカウントとAPIキーを更新")
+            dialogBuilder.setTitle("ユーザ情報の更新")
             dialogBuilder.setView(dialogView)
             // ダイアログに既存のアカウント情報をセット
             accountEditText.setText(accountInfo.accountName)
