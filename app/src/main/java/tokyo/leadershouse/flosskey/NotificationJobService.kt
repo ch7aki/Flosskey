@@ -10,7 +10,6 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.media.RingtoneManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -24,7 +23,6 @@ import java.time.Instant
 
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
-    private lateinit var sharedPreferences: SharedPreferences
     private var notificationId = 0 // 通知IDを保持する変数
     companion object {
         private const val JOB_ID_RANGE_START        = 2000
@@ -79,10 +77,10 @@ class NotificationJobService : JobService() {
     private fun processNotifications(responseBody: String) {
         Log.d("debug", "processNotifications[IN]")
         val jsonArray = JSONArray(responseBody)
-        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val keyStore  = KeyStoreHelper.getKeyStore(this)
         // 端末が既知の最新の通知のcratedAt
         val instantDevice = Instant.parse(
-            sharedPreferences.getString(
+            keyStore.getString(
                 "createdAt",
                 "2000-01-01T00:00:00.000Z"
             ) ?: "")
@@ -91,7 +89,7 @@ class NotificationJobService : JobService() {
             val createdAt = notification.optString("createdAt")
             // API叩いて取得した通知のcratedAt
             val instantApi = Instant.parse(createdAt)
-            val comparisonResult = instantApi.compareTo(instantDevice )
+            val comparisonResult = instantApi.compareTo(instantDevice)
             if (comparisonResult > 0) {
                 val type = notification.optString("type")
                 val user = notification.optJSONObject("user")
@@ -112,8 +110,7 @@ class NotificationJobService : JobService() {
             else { break }
         }
         val tempolaryId = jsonArray.optJSONObject(0).optString("createdAt")
-        val sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
+        val editor = keyStore.edit()
         editor.putString("createdAt", tempolaryId)
         editor.apply()
         Log.d("debug", "processNotifications[OUT]")
@@ -157,10 +154,5 @@ class NotificationJobService : JobService() {
             .build()
         jobScheduler.schedule(jobInfo)
         Log.d("debug","scheduleJob[OUT]")
-    }
-
-    fun cancelAllJobs() {
-        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-        jobScheduler.cancelAll()
     }
 }

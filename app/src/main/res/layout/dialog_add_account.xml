@@ -3,17 +3,19 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
-
     <EditText
         android:id="@+id/accountEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="アカウント名" />
-
+    <EditText
+        android:id="@+id/instanceEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="インスタンス名" />
     <EditText
         android:id="@+id/apiKeyEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="APIキー" />
-
 </LinearLayout>

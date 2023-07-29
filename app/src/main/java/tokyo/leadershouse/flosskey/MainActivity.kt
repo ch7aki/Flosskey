@@ -52,12 +52,11 @@ class MainActivity : AppCompatActivity() {
 
     // 登録済みのAPIキーを使って通知ジョブ実行
     private fun checkApi() {
-        val sharedPreferences = getSharedPreferences("AccountInfo", Context.MODE_PRIVATE)
-        val accountCount = sharedPreferences.getInt("accountCount", 0)
-        if (accountCount > 1) {
+        val accountList = KeyStoreHelper.loadAccountInfo(this)
+        if (accountList.isNotEmpty()) {
             // 1番目には追加用の要素があるから1から数え上げる
-            for (i in 1 until accountCount) {
-                val apiKey = sharedPreferences.getString("apiKey_$i", "") ?: ""
+            for (element in accountList) {
+                val apiKey = element.apiKey
                 startBackgroundJob(apiKey)
             }
         }
@@ -119,7 +118,7 @@ class MainActivity : AppCompatActivity() {
         val jobId = contenMenuId++
         val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPeriodic(0) // おそらくAndroid13は最小間隔が10分
+            .setPeriodic(0)
         val extras = PersistableBundle()
         extras.putString("apiKey", apiKey)
         jobInfoBuilder.setExtras(extras)
@@ -138,7 +137,7 @@ class MainActivity : AppCompatActivity() {
             val hitTestResult = webView.hitTestResult
             // 画像だけ長押し時の挙動を変える
             if (hitTestResult.type == WebView.HitTestResult.IMAGE_TYPE) {
-                menu?.add(0, contenMenuId, 0, "Download") // コンテキストメニューの項目を追加
+                menu?.add(0, contenMenuId, 0, "Download")
             }
     }
 
