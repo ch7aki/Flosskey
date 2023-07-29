@@ -51,7 +51,6 @@ class NotificationJobService : JobService() {
         Log.d("debug","fetchNotifications[IN]")
         val thread = Thread {
             val client = OkHttpClient()
-            val url = MISSKEY_API_URL
             // ぶっちゃけsinceIdを変換してハンドリングしたいが一旦はcreatedAtで通知判定する...
             val requestBody = JSONObject()
                 .put("i", apiKey)
@@ -59,7 +58,7 @@ class NotificationJobService : JobService() {
                 .toString()
                 .toRequestBody("application/json".toMediaType())
             val request = Request.Builder()
-                .url(url)
+                .url(getMisskeyApiUrl())
                 .post(requestBody)
                 .build()
             try {

@@ -1,5 +1,4 @@
 package tokyo.leadershouse.flosskey
-import android.annotation.SuppressLint
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
@@ -13,7 +12,8 @@ import android.view.ContextMenu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.*
-import android.widget.TextView
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -22,18 +22,16 @@ import androidx.drawerlayout.widget.DrawerLayout
 // TODO: 入力されたAPIキーが有効かを軽く確認したい
 // TODO: sinceIdに対応したい、今はAPI引き出してアプリ内で判定してごまかしてる
 
-const val MISSKEY_URL      = "https://misskey.io"
-const val MISSKEY_DOMAIN   = "misskey.io"
-const val MISSKEY_API_URL  = "https://misskey.io/api/i/notifications"
 class MainActivity : AppCompatActivity() {
     private var contenMenuId = 1001
     private var sidebarOpen = false
     private lateinit var webView: WebView
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // デフォルトインスタンス設定
+        setDefaultInstance()
         // 登録済みのAPIキーを使って通知ジョブ実行
         checkApi()
         // サイドバー設定
@@ -50,6 +48,13 @@ class MainActivity : AppCompatActivity() {
         MisskeyWebViewClient(this).initializeWebView(webView)
     }
 
+    private fun setDefaultInstance() {
+        // デフォルトインスタンス設定
+        val sharedPreferences = getSharedPreferences("instance", Context.MODE_PRIVATE)
+        MISSKEY_DOMAIN = sharedPreferences.getString("misskeyDomain", "misskey.io") ?:"misskey.io"
+        Log.d("debug","MISSKEY_DOMAIN  = $MISSKEY_DOMAIN")
+    }
+
     // 登録済みのAPIキーを使って通知ジョブ実行
     private fun checkApi() {
         val accountList = KeyStoreHelper.loadAccountInfo(this)
@@ -63,9 +68,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     // サイドバー設定
-    private fun setSideBar(){
+    private fun setSideBar() {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
-        // サイドバーの開閉状態を監視し、WebViewに対するタッチイベントを遮断する
+        val sidebarListView = findViewById<ListView>(R.id.sidebar)
+        val sidebarItems = arrayOf("APIキーの管理", "WebViewを更新")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, sidebarItems)
+        sidebarListView.adapter = adapter
+        sidebarListView.setOnItemClickListener { _, _, position, _ ->
+            when (position) {
+                0 -> { startActivity(Intent(this, AccountListActivity::class.java)) }
+                1 -> { webView.loadUrl(getMisskeyUrl()) }
+            }
+        }
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
             override fun onDrawerStateChanged(newState: Int) {}
@@ -82,13 +96,6 @@ class MainActivity : AppCompatActivity() {
                 webView.dispatchTouchEvent(event)
                 touchInterceptor.performClick() // クリックイベントも発生させる
             }
-        }
-
-        // サイドバーの項目をクリックしたときの処理
-        val apiKeyItem = findViewById<TextView>(R.id.apiKeyItem)
-        apiKeyItem.setOnClickListener {
-            val intent = Intent(this, AccountListActivity::class.java)
-            startActivity(intent)
         }
     }
 
