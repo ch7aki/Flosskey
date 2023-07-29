@@ -47,8 +47,9 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
                     // それ以外のドメインの場合、外部ブラウザを起動
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     context.startActivity(intent)
+                    return true
                 }
-                return true
+                return false
             }
         }
     }
