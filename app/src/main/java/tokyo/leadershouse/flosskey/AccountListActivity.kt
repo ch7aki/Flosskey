@@ -51,13 +51,12 @@ class AccountListActivity : AppCompatActivity() {
         }
     }
     // 「アカウントとAPIキーを登録」のダイアログを表示する関数
-// 「アカウントとAPIキーを登録」のダイアログを表示する関数
     private fun showHandleAccountDialog(isAdd: Boolean, accountInfo: AccountInfo) {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_account, null)
-        val accountEditText = dialogView.findViewById<EditText>(R.id.accountEditText)
+        val dialogView       = LayoutInflater.from(this).inflate(R.layout.dialog_add_account, null)
+        val accountEditText  = dialogView.findViewById<EditText>(R.id.accountEditText)
         val instanceEditText = dialogView.findViewById<EditText>(R.id.instanceEditText)
-        val apiKeyEditText = dialogView.findViewById<EditText>(R.id.apiKeyEditText)
-        val dialogBuilder = AlertDialog.Builder(this)
+        val apiKeyEditText   = dialogView.findViewById<EditText>(R.id.apiKeyEditText)
+        val dialogBuilder    = AlertDialog.Builder(this)
         if (isAdd) {
             // アカウント追加用のダイアログ
             dialogBuilder.setTitle("アカウントとAPIキーを追加")
@@ -83,13 +82,13 @@ class AccountListActivity : AppCompatActivity() {
             apiKeyEditText.setText(accountInfo.apiKey)
             dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // 更新ボタンが押された場合の処理
-                val updatedAccount = accountEditText.text.toString()
+                val updatedAccount  = accountEditText.text.toString()
                 val updatedInstance = instanceEditText.text.toString()
-                val updatedApiKey = apiKeyEditText.text.toString()
+                val updatedApiKey   = apiKeyEditText.text.toString()
                 // リストビューのアイテムを更新
-                accountInfo.accountName = updatedAccount
+                accountInfo.accountName  = updatedAccount
                 accountInfo.instanceName = updatedInstance
-                accountInfo.apiKey = updatedApiKey
+                accountInfo.apiKey       = updatedApiKey
                 // アカウント情報を保存
                 saveAccountInfo()
             }
@@ -105,16 +104,35 @@ class AccountListActivity : AppCompatActivity() {
     }
 
     private fun showDeleteOrEditDialog(accountInfo: AccountInfo) {
-        val options = arrayOf("編集", "削除")
+        val options = arrayOf(
+            "このインスタンスに切り替える",
+            "このインスタンスをデフォルトにする",
+            "登録情報の編集",
+            "登録情報の削除"
+        )
         val builder = AlertDialog.Builder(this)
         builder.setItems(options) { _, which ->
             when (which) {
-                0 -> showHandleAccountDialog(false, accountInfo) // 編集の選択
-                1 -> deleteAccount(accountInfo) // 削除の選択
+                0 -> changeInstance(accountInfo.instanceName)
+                1 -> setDefaultInstance(accountInfo.instanceName)
+                2 -> showHandleAccountDialog(false, accountInfo) // 編集の選択
+                3 -> deleteAccount(accountInfo) // 削除の選択
             }
         }
             .setNegativeButton("キャンセル") { dialog, _ -> dialog.dismiss() }
             .show()
+    }
+
+    private fun changeInstance(instanceName: String) {
+        MISSKEY_DOMAIN = instanceName
+        Log.d("debug","instanceName = $instanceName")
+        Log.d("debug","MISSKEY_DOMAIN = $MISSKEY_DOMAIN")
+    }
+
+    private fun setDefaultInstance(instanceName: String) {
+        val sharedPreferences = getSharedPreferences("instance", Context.MODE_PRIVATE)
+        Log.d("debug","instanceName = $instanceName")
+        sharedPreferences.edit().putString("misskeyDomain", instanceName).apply()
     }
 
     private fun deleteAccount(accountInfo: AccountInfo) {
