@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         // デフォルトインスタンス設定
         setDefaultInstance()
-        // 登録済みのAPIキーを使って通知ジョブ実行
-        checkApi()
+        // バックグラウンド設定
+        startBackgroundJob()
         // サイドバー設定
         setSideBar()
         // 外観と細かい設定
@@ -53,17 +53,38 @@ class MainActivity : AppCompatActivity() {
         // デフォルトインスタンス設定
         val sharedPreferences = getSharedPreferences("instance", Context.MODE_PRIVATE)
         MISSKEY_DOMAIN = sharedPreferences.getString("misskeyDomain", "misskey.io") ?:"misskey.io"
-        Log.d("debug","MISSKEY_DOMAIN  = $MISSKEY_DOMAIN")
+        Log.d("debug","MISSKEY_DOMAIN = $MISSKEY_DOMAIN")
     }
 
-    // 登録済みのAPIキーを使って通知ジョブ実行
-    private fun checkApi() {
+    // バックグラウンドサービス実行
+    private fun startBackgroundJob() {
         val accountList = KeyStoreHelper.loadAccountInfo(this)
+        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         if (accountList.isNotEmpty()) {
             // 1番目には追加用の要素があるから1から数え上げる
             for (element in accountList) {
-                val apiKey = element.apiKey
-                startBackgroundJob(apiKey)
+                val instanceName = element.instanceName
+                val apiKey       = element.apiKey
+                val jobId        = element.jobId
+                // 同じJobId起動を制御
+                val existingJob = jobScheduler.getPendingJob(jobId)
+                if (existingJob != null) {
+                    Log.d("debug", "$jobId:同一JobIdがスケジュールされているのでスキップします")
+                    continue
+                }
+                Log.d("debug", "apiKey:${apiKey}で通知取得開始")
+                val componentName = ComponentName(this, NotificationJobService::class.java)
+                val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setPeriodic(0)
+                val extras = PersistableBundle()
+                extras.putString("instanceName", instanceName)
+                extras.putString("apiKey", apiKey)
+                extras.putInt("jobId", jobId)
+                jobInfoBuilder.setExtras(extras)
+                val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+                val jobInfo = jobInfoBuilder.build()
+                jobScheduler.schedule(jobInfo)
             }
         }
     }
@@ -83,9 +104,9 @@ class MainActivity : AppCompatActivity() {
         sidebarListView.setOnItemClickListener { _, _, position, _ ->
             when (position) {
                 0 -> { startActivity(Intent(this, AccountListActivity::class.java)) }
-                1 -> { webView.loadUrl(getMisskeyUrl()) }
-                2 -> { webView.loadUrl("https://misskey.io/@ch1ak1") }
-                3 -> { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ch1ak1STR/Flosskey"))) }
+                1 -> { webView.loadUrl(getMisskeyUrlData("URL","")) }
+                2 -> { webView.loadUrl(DEVELOPER_MISSKEY_URL ) }
+                3 -> { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL ))) }
             }
         }
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
@@ -126,21 +147,6 @@ class MainActivity : AppCompatActivity() {
         }
         this.onBackPressedDispatcher.addCallback(this, callback)
     }
-    // バックグラウンドサービス実行
-    private fun startBackgroundJob(apiKey: String) {
-        Log.d("debug", "apiKey:${apiKey}で通知取得開始")
-        val componentName = ComponentName(this, NotificationJobService::class.java)
-        val jobId = contenMenuId++
-        val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPeriodic(0)
-        val extras = PersistableBundle()
-        extras.putString("apiKey", apiKey)
-        jobInfoBuilder.setExtras(extras)
-        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-        val jobInfo = jobInfoBuilder.build()
-        jobScheduler.schedule(jobInfo)
-    }
 
     // 長押しメニュー作成処理
     override fun onCreateContextMenu(
@@ -173,7 +179,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        Log.d("debug", "onDestroy")
         super.onDestroy()
         webView.destroy()
     }

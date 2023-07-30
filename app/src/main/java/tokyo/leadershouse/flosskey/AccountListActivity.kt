@@ -28,7 +28,8 @@ class AccountListActivity : AppCompatActivity() {
         accountList.add(AccountInfo(
             "ユーザ情報追加",
             "※ユーザ名はあなたがわかれば何でもOK!",
-            "※インスタンス名/APIキーは通知取得に使います！"))
+            "※インスタンス名/APIキーは通知取得に使います！",
+            0))
         accountList.addAll(keyStoreAccounts)
 
         // アダプターをセット
@@ -67,7 +68,7 @@ class AccountListActivity : AppCompatActivity() {
                 val instance = instanceEditText.text.toString()
                 val apiKey   = apiKeyEditText.text.toString()
                 // 入力されたアカウントとAPIキーをリストに追加
-                accountList.add(AccountInfo(account, instance, apiKey))
+                accountList.add(AccountInfo(account, instance, apiKey, getCurrentTimestamp()))
                 accountAdapter.notifyDataSetChanged()
                 // アカウント情報を保存
                 saveAccountInfo()
@@ -139,14 +140,7 @@ class AccountListActivity : AppCompatActivity() {
         // アカウント情報の削除処理を実装
         accountList.remove(accountInfo)
         accountAdapter.notifyDataSetChanged()
-
         // キーストアから該当のアカウント情報を削除する
-        val updatedAccountList = accountList.filter { it.accountName != accountInfo.accountName }
-        KeyStoreHelper.saveAccountInfoList(this, updatedAccountList)
-    }
-
-    override fun onDestroy() {
-        saveAccountInfo()
-        super.onDestroy()
+        KeyStoreHelper.saveAccountInfoList(this, accountList.filter { it.accountName != "ユーザ情報追加" })
     }
 }

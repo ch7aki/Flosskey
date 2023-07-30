@@ -7,10 +7,10 @@ class CookieHandler(private val context: Context) {
     fun loadCookies() {
         val sharedPreferences = context.getSharedPreferences("Cookies", Context.MODE_PRIVATE)
         val savedCookies = sharedPreferences.getString("cookies", null)
-        savedCookies?.let { cookieManager.setCookie(getMisskeyUrl(), it) }
+        savedCookies?.let { cookieManager.setCookie(getMisskeyUrlData("URL",""), it) }
     }
     fun saveCookies() {
-        val cookies = cookieManager.getCookie(getMisskeyUrl())
+        val cookies = cookieManager.getCookie(getMisskeyUrlData("URL",""))
         val sharedPreferences = context.getSharedPreferences("Cookies", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("cookies", cookies)

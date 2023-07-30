@@ -70,7 +70,7 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
         webView.settings.javaScriptEnabled   = true
         webView.settings.domStorageEnabled   = true
         limitAccesToOuterDomain(webView)
-        webView.loadUrl(getMisskeyUrl())
+        webView.loadUrl(getMisskeyUrlData("URL",""))
         webView.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(
             webView: WebView,

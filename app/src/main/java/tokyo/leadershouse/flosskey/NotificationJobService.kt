@@ -25,18 +25,18 @@ import java.time.Instant
 class NotificationJobService : JobService() {
     private var notificationId = 0 // 通知IDを保持する変数
     companion object {
-        private const val JOB_ID_RANGE_START        = 2000
-        private const val JOB_ID_RANGE_END          = 3000
         private const val NOTIFICATION_CHANNEL_ID   = "flosskey_notifications"
         private const val NOTIFICATION_CHANNEL_NAME = "Flosskey Notifications"
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("debug","onStartJob[IN]")
-        val apiKey = params?.extras?.getString("apiKey")
-        if (apiKey != null) { fetchNotifications(apiKey) }
+        val instanceName = params?.extras?.getString("instanceName")
+        val apiKey       = params?.extras?.getString("apiKey")
+        val jobId        = params?.extras?.getInt("jobId")
+        if (apiKey != null) { fetchNotifications(apiKey, instanceName!!) }
         else { return false }
-        scheduleJob()
+        scheduleJob(jobId!!)
         Log.d("debug","onStartJob[OUT]")
         return true
     }
@@ -47,7 +47,7 @@ class NotificationJobService : JobService() {
         return true
     }
 
-    private fun fetchNotifications(apiKey: String) {
+    private fun fetchNotifications(apiKey: String, instanceName: String) {
         Log.d("debug","fetchNotifications[IN]")
         val thread = Thread {
             val client = OkHttpClient()
@@ -58,7 +58,7 @@ class NotificationJobService : JobService() {
                 .toString()
                 .toRequestBody("application/json".toMediaType())
             val request = Request.Builder()
-                .url(getMisskeyApiUrl())
+                .url(getMisskeyUrlData("API",instanceName))
                 .post(requestBody)
                 .build()
             try {
@@ -142,16 +142,16 @@ class NotificationJobService : JobService() {
         Log.d("debug","sendNotification[OUT]")
     }
 
-    private fun scheduleJob() {
+    private fun scheduleJob(jobId: Int) {
         Log.d("debug","scheduleJob[IN]")
         val componentName = ComponentName(this, NotificationJobService::class.java)
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-        val jobId = (JOB_ID_RANGE_START..JOB_ID_RANGE_END).random()
         val jobInfo = JobInfo.Builder(jobId, componentName)
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
             .setPeriodic(0)
             .build()
         jobScheduler.schedule(jobInfo)
+        Log.d("debug","scheduled: $jobId")
         Log.d("debug","scheduleJob[OUT]")
     }
 }
