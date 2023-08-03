@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.ListView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
 
 class AccountListActivity : AppCompatActivity() {
 
@@ -53,25 +54,32 @@ class AccountListActivity : AppCompatActivity() {
     }
     // 「アカウントとAPIキーを登録」のダイアログを表示する関数
     private fun showHandleAccountDialog(isAdd: Boolean, accountInfo: AccountInfo) {
-        val dialogView       = LayoutInflater.from(this).inflate(R.layout.dialog_add_account, null)
-        val accountEditText  = dialogView.findViewById<EditText>(R.id.accountEditText)
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_account, null)
+        val accountEditText = dialogView.findViewById<EditText>(R.id.accountEditText)
         val instanceEditText = dialogView.findViewById<EditText>(R.id.instanceEditText)
-        val apiKeyEditText   = dialogView.findViewById<EditText>(R.id.apiKeyEditText)
-        val dialogBuilder    = AlertDialog.Builder(this)
+        val apiKeyEditText = dialogView.findViewById<EditText>(R.id.apiKeyEditText)
+        val dialogBuilder = AlertDialog.Builder(this)
+
+        // OKボタンを初期状態では無効にしておく
+        dialogBuilder.setPositiveButton("OK", null)
+
         if (isAdd) {
             // アカウント追加用のダイアログ
             dialogBuilder.setTitle("ユーザ情報の追加")
             dialogBuilder.setView(dialogView)
             dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // OKボタンが押されたときの処理
-                val account  = accountEditText.text.toString()
+                val account = accountEditText.text.toString()
                 val instance = instanceEditText.text.toString()
-                val apiKey   = apiKeyEditText.text.toString()
+                val apiKey = apiKeyEditText.text.toString()
+
                 // 入力されたアカウントとAPIキーをリストに追加
-                accountList.add(AccountInfo(account, instance, apiKey, getCurrentTimestamp()))
-                accountAdapter.notifyDataSetChanged()
-                // アカウント情報を保存
-                saveAccountInfo()
+                if (!accountList.any { it.apiKey == apiKey }) {
+                    accountList.add(AccountInfo(account, instance, apiKey, getCurrentTimestamp()))
+                    accountAdapter.notifyDataSetChanged()
+                    // アカウント情報を保存
+                    saveAccountInfo()
+                }
             }
         } else {
             // 編集用のダイアログ
@@ -83,19 +91,48 @@ class AccountListActivity : AppCompatActivity() {
             apiKeyEditText.setText(accountInfo.apiKey)
             dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // 更新ボタンが押された場合の処理
-                val updatedAccount  = accountEditText.text.toString()
+                val updatedAccount = accountEditText.text.toString()
                 val updatedInstance = instanceEditText.text.toString()
-                val updatedApiKey   = apiKeyEditText.text.toString()
-                // リストビューのアイテムを更新
-                accountInfo.accountName  = updatedAccount
-                accountInfo.instanceName = updatedInstance
-                accountInfo.apiKey       = updatedApiKey
-                // アカウント情報を保存
-                saveAccountInfo()
+                val updatedApiKey = apiKeyEditText.text.toString()
+
+                // 既存のアカウント情報を更新
+                val existingAccount = accountList.find { it.apiKey == accountInfo.apiKey }
+                if (existingAccount != null) {
+                    existingAccount.accountName = updatedAccount
+                    existingAccount.instanceName = updatedInstance
+                    existingAccount.apiKey = updatedApiKey
+                    // アカウント情報を保存
+                    saveAccountInfo()
+                }
             }
         }
+
         dialogBuilder.setNegativeButton("キャンセル", null)
-        dialogBuilder.show()
+
+        val alertDialog = dialogBuilder.create()
+
+        // ダイアログが表示される前に実行する処理を設定
+        alertDialog.setOnShowListener {
+            val positiveButton = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+            // OKボタンの有効・無効を制御する関数
+            fun updatePositiveButtonState() {
+                val account = accountEditText.text.toString()
+                val instance = instanceEditText.text.toString()
+                val apiKey = apiKeyEditText.text.toString()
+                val isApiKeyValid = apiKey.isNotBlank() && !accountList.any { it.apiKey == apiKey }
+                val isPositiveButtonEnabled =
+                    account.isNotBlank() && instance.isNotBlank() && isApiKeyValid
+                positiveButton.isEnabled = isPositiveButtonEnabled
+            }
+            // 入力欄の内容が変更されたらOKボタンの有効・無効を更新する
+            accountEditText.addTextChangedListener { updatePositiveButtonState() }
+            instanceEditText.addTextChangedListener { updatePositiveButtonState() }
+            apiKeyEditText.addTextChangedListener { updatePositiveButtonState() }
+            // 初回表示時にもOKボタンの有効・無効を更新する
+            updatePositiveButtonState()
+        }
+        alertDialog.show()
     }
 
     private fun saveAccountInfo() {
@@ -143,4 +180,5 @@ class AccountListActivity : AppCompatActivity() {
         // キーストアから該当のアカウント情報を削除する
         KeyStoreHelper.saveAccountInfoList(this, accountList.filter { it.accountName != "ユーザ情報追加" })
     }
+
 }

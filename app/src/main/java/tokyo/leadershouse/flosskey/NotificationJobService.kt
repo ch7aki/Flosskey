@@ -24,20 +24,29 @@ import java.time.Instant
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
     private var notificationId = 0 // 通知IDを保持する変数
+    private val apiKeyList: MutableList<String> = mutableListOf()
     companion object {
         private const val NOTIFICATION_CHANNEL_ID   = "flosskey_notifications"
         private const val NOTIFICATION_CHANNEL_NAME = "Flosskey Notifications"
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
-        Log.d("debug","onStartJob[IN]")
+        Log.d("debug", "onStartJob[IN]")
         val instanceName = params?.extras?.getString("instanceName")
-        val apiKey       = params?.extras?.getString("apiKey")
-        val jobId        = params?.extras?.getInt("jobId")
-        if (apiKey != null) { fetchNotifications(apiKey, instanceName!!) }
-        else { return false }
-        scheduleJob(jobId!!)
-        Log.d("debug","onStartJob[OUT]")
+        val apiKey = params?.extras?.getString("apiKey")
+
+        if (apiKey != null) {
+            // apiKeyがapiKeyListに含まれているかチェック
+            if (apiKeyList.contains(apiKey)) {
+                Log.d("debug", "既に動作しているjobと同じapiKey:$apiKey ")
+                jobFinished(params, false)
+            } else {
+                apiKeyList.add(apiKey) // apiKeyをリストに追加
+                fetchNotifications(apiKey, instanceName!!)
+            }
+        } else { return false }
+
+        Log.d("debug", "onStartJob[OUT]")
         return true
     }
 
@@ -140,18 +149,5 @@ class NotificationJobService : JobService() {
         notificationManager.createNotificationChannel(channel)
         notificationManager.notify(notificationId++, notificationBuilder.build())
         Log.d("debug","sendNotification[OUT]")
-    }
-
-    private fun scheduleJob(jobId: Int) {
-        Log.d("debug","scheduleJob[IN]")
-        val componentName = ComponentName(this, NotificationJobService::class.java)
-        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-        val jobInfo = JobInfo.Builder(jobId, componentName)
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPeriodic(0)
-            .build()
-        jobScheduler.schedule(jobInfo)
-        Log.d("debug","scheduled: $jobId")
-        Log.d("debug","scheduleJob[OUT]")
     }
 }
