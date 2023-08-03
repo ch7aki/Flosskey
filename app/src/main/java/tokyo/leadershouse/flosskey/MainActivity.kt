@@ -66,12 +66,6 @@ class MainActivity : AppCompatActivity() {
                 val instanceName = element.instanceName
                 val apiKey       = element.apiKey
                 val jobId        = element.jobId
-                // 同じJobId起動を制御
-                val existingJob = jobScheduler.getPendingJob(jobId)
-                if (existingJob != null) {
-                    Log.d("debug", "$jobId:同一JobIdがスケジュールされているのでスキップします")
-                    continue
-                }
                 Log.d("debug", "apiKey:${apiKey}で通知取得開始")
                 val componentName = ComponentName(this, NotificationJobService::class.java)
                 val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
