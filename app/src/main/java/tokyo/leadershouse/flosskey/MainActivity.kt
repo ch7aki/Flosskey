@@ -1,12 +1,16 @@
 package tokyo.leadershouse.flosskey
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.media.RingtoneManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
@@ -19,6 +23,7 @@ import android.widget.ListView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import androidx.drawerlayout.widget.DrawerLayout
 
 class MainActivity : AppCompatActivity() {

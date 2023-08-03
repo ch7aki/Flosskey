@@ -138,7 +138,7 @@ class NotificationJobService : JobService() {
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.sym_def_app_icon)
+            .setSmallIcon(R.drawable.ic_stat_name)
             .setContentTitle(NOTIFICATION_CHANNEL_NAME)
             .setContentText(message)
             .setAutoCancel(true)
