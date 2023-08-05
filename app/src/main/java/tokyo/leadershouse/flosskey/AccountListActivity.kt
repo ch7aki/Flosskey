@@ -1,17 +1,20 @@
 package tokyo.leadershouse.flosskey
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.widget.EditText
 import android.widget.ListView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 
 class AccountListActivity : AppCompatActivity() {
-
+    private var isChanged: Boolean = false
     private val accountList = mutableListOf<AccountInfo>()
     private lateinit var accountListView: ListView
     private lateinit var accountAdapter: AccountAdapter
@@ -69,6 +72,7 @@ class AccountListActivity : AppCompatActivity() {
             dialogBuilder.setView(dialogView)
             dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // OKボタンが押されたときの処理
+                isChanged = true
                 val account = accountEditText.text.toString()
                 val instance = instanceEditText.text.toString()
                 val apiKey = apiKeyEditText.text.toString()
@@ -91,6 +95,7 @@ class AccountListActivity : AppCompatActivity() {
             apiKeyEditText.setText(accountInfo.apiKey)
             dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // 更新ボタンが押された場合の処理
+                isChanged = true
                 val updatedAccount = accountEditText.text.toString()
                 val updatedInstance = instanceEditText.text.toString()
                 val updatedApiKey = apiKeyEditText.text.toString()
@@ -143,42 +148,39 @@ class AccountListActivity : AppCompatActivity() {
 
     private fun showDeleteOrEditDialog(accountInfo: AccountInfo) {
         val options = arrayOf(
-            "このインスタンスに切り替える",
-            "このインスタンスをデフォルトにする",
             "登録情報の編集",
             "登録情報の削除"
         )
         val builder = AlertDialog.Builder(this)
         builder.setItems(options) { _, which ->
             when (which) {
-                0 -> changeInstance(accountInfo.instanceName)
-                1 -> setDefaultInstance(accountInfo.instanceName)
-                2 -> showHandleAccountDialog(false, accountInfo) // 編集の選択
-                3 -> deleteAccount(accountInfo) // 削除の選択
+                0 -> showHandleAccountDialog(false, accountInfo) // 編集の選択
+                1 -> deleteAccount(accountInfo) // 削除の選択
             }
         }
             .setNegativeButton("キャンセル") { dialog, _ -> dialog.dismiss() }
             .show()
     }
 
-    private fun changeInstance(instanceName: String) {
-        MISSKEY_DOMAIN = instanceName
-        Log.d("debug","instanceName = $instanceName")
-        Log.d("debug","MISSKEY_DOMAIN = $MISSKEY_DOMAIN")
-    }
-
-    private fun setDefaultInstance(instanceName: String) {
-        val sharedPreferences = getSharedPreferences("instance", Context.MODE_PRIVATE)
-        Log.d("debug","instanceName = $instanceName")
-        sharedPreferences.edit().putString("misskeyDomain", instanceName).apply()
-    }
 
     private fun deleteAccount(accountInfo: AccountInfo) {
         // アカウント情報の削除処理を実装
+        isChanged = true
         accountList.remove(accountInfo)
         accountAdapter.notifyDataSetChanged()
         // キーストアから該当のアカウント情報を削除する
         KeyStoreHelper.saveAccountInfoList(this, accountList.filter { it.accountName != "ユーザ情報追加" })
     }
 
+    override fun onBackPressed() {
+        val intent = Intent()
+        if (isChanged) {
+            // アカウント情報が変更された場合はRESULT_OKで返す
+            setResult(Activity.RESULT_OK, intent)
+        } else {
+            // 変更がない場合はRESULT_CANCELEDで返す
+            setResult(Activity.RESULT_CANCELED, intent)
+        }
+        finish()
+    }
 }

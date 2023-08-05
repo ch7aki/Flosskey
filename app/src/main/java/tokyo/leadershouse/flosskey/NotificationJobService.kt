@@ -24,39 +24,29 @@ import java.time.Instant
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
     private var notificationId = 0 // 通知IDを保持する変数
-    private val apiKeyList: MutableList<String> = mutableListOf()
     companion object {
         private const val NOTIFICATION_CHANNEL_ID   = "flosskey_notifications"
-        private const val NOTIFICATION_CHANNEL_NAME = "Flosskey Notifications"
+        private const val NOTIFICATION_CHANNEL_NAME = "Flosskey"
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("debug", "onStartJob[IN]")
         val instanceName = params?.extras?.getString("instanceName")
         val apiKey = params?.extras?.getString("apiKey")
-
-        if (apiKey != null) {
-            // apiKeyがapiKeyListに含まれているかチェック
-            if (apiKeyList.contains(apiKey)) {
-                Log.d("debug", "既に動作しているjobと同じapiKey:$apiKey ")
-                jobFinished(params, false)
-            } else {
-                apiKeyList.add(apiKey) // apiKeyをリストに追加
-                fetchNotifications(apiKey, instanceName!!)
-            }
-        } else { return false }
-
+        val jobId = params?.extras?.getInt("jobId")
+        fetchNotifications(apiKey!!, instanceName!!, jobId!!)
         Log.d("debug", "onStartJob[OUT]")
         return true
     }
 
     override fun onStopJob(params: JobParameters?): Boolean {
         Log.d("debug","onStopJob[IN]")
+        jobFinished(params,true)
         Log.d("debug","onStopJob[OUT]")
         return true
     }
 
-    private fun fetchNotifications(apiKey: String, instanceName: String) {
+    private fun fetchNotifications(apiKey: String, instanceName: String, jobId: Int) {
         Log.d("debug","fetchNotifications[IN]")
         val thread = Thread {
             val client = OkHttpClient()
@@ -74,7 +64,7 @@ class NotificationJobService : JobService() {
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
-                    if (!responseBody.isNullOrBlank()) { processNotifications(responseBody) }
+                    if (!responseBody.isNullOrBlank()) { processNotifications(responseBody, jobId) }
                 } else { Log.d("debug", "Failed to retrieve notifications: ${response.code}") }
             } catch (e: Exception) { Log.d("debug", "Failed to retrieve notifications", e) }
         }
@@ -82,14 +72,15 @@ class NotificationJobService : JobService() {
         Log.d("debug","fetchNotifications[OUT]")
     }
 
-    private fun processNotifications(responseBody: String) {
+    private fun processNotifications(responseBody: String, jobId: Int) {
         Log.d("debug", "processNotifications[IN]")
+        var hasValidNotification = false
         val jsonArray = JSONArray(responseBody)
         val keyStore  = KeyStoreHelper.getKeyStore(this)
         // 端末が既知の最新の通知のcratedAt
         val instantDevice = Instant.parse(
             keyStore.getString(
-                "createdAt",
+                "createdAt_$jobId",
                 "2000-01-01T00:00:00.000Z"
             ) ?: "")
         for (i in 0 until jsonArray.length()) {
@@ -113,9 +104,15 @@ class NotificationJobService : JobService() {
                     "allowFollowRequest"   -> "${name}へのフォローが許可されました"
                     else -> continue // 今度対応
                 }
-                if (message.isNotEmpty()) { sendNotification(message) }
+                if (message.isNotEmpty()) {
+                    hasValidNotification = true
+                    sendNotification(message)
+                }
             }
             else { break }
+        }
+        if (!hasValidNotification) {
+            sendNotification("通知は無いみたい")
         }
         val tempolaryId = jsonArray.optJSONObject(0).optString("createdAt")
         val editor = keyStore.edit()

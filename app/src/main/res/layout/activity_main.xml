@@ -22,10 +22,88 @@
             android:clickable="true" />
 
     </FrameLayout>
-    <ListView
-        android:id="@+id/sidebar"
+
+    <!-- サイドバー -->
+    <LinearLayout
         android:layout_width="260dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@android:color/black" />
+        android:orientation="vertical"
+        android:background="@android:color/black">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_launcher_foreground"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:id="@+id/versionTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Flosskey Version : ${BuildConfig.VERSION_NAME}"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp" />
+        <!-- アプリ機能の見出し -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="アプリ機能"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:padding="8dp"/>
+
+        <!-- サイドバーアイテム -->
+        <ListView
+            android:id="@+id/sidebar"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:divider="@android:color/black"
+            android:dividerHeight="1dp"
+            android:listSelector="@android:color/transparent"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+
+        <!-- 登録済みのインスタンスの見出し -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="登録済みインスタンス"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:padding="8dp"/>
+
+        <!-- アカウントリスト -->
+        <ListView
+            android:id="@+id/accountListView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:divider="@android:color/black"
+            android:dividerHeight="1dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="about Flosskey"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:padding="8dp"/>
+
+        <!-- アプリについて -->
+        <ListView
+            android:id="@+id/devListView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:divider="@android:color/black"
+            android:dividerHeight="1dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+    </LinearLayout>
 </androidx.drawerlayout.widget.DrawerLayout>
