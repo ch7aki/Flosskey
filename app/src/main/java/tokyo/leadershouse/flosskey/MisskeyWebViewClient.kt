@@ -63,6 +63,10 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
                 val data: Intent? = result.data
                 onActivityResult(data)
             }
+            if (fileUploadCallback != null) {
+                fileUploadCallback?.onReceiveValue(null)
+                fileUploadCallback = null
+            }
         }
         // WebViewの設定
         webView.webViewClient = MisskeyWebViewClient(context)

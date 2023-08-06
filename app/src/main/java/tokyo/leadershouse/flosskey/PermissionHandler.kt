@@ -20,8 +20,6 @@ class PermissionHandler(private val activity: Activity) : ActivityCompat.OnReque
                 permissionsToRequest.toTypedArray(),
                 permissionCode
             )
-        } else {
-            // パーミッションが許可されているなら何もしない
         }
     }
 
@@ -49,7 +47,7 @@ class PermissionHandler(private val activity: Activity) : ActivityCompat.OnReque
                 if (permissionsDenied.isNotEmpty()) {
                     Toast.makeText(
                         activity,
-                        "権限を許可していただけないと通知や画像保存ができない可能性があります。",
+                        "権限を許可していただけないと一部機能に支障がある恐れがあります。",
                         Toast.LENGTH_SHORT
                     ).show()
                 }

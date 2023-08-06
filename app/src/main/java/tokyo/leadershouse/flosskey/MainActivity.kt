@@ -53,8 +53,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startBackgroundJob() {
-        val accountList = KeyStoreHelper.loadAccountInfo(this)
+        val accountList  = KeyStoreHelper.loadAccountInfo(this)
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        // 既存のjobは全て止めてから設定する
+        jobScheduler.cancelAll()
         if (accountList.isNotEmpty()) {
             for (element in accountList) {
                 val instanceName = element.instanceName
@@ -65,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                     val componentName = ComponentName(this, NotificationJobService::class.java)
                     val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPeriodic(0)
+                        .setPeriodic(15 * 60 * 1000)
                         .setPersisted(true)
                     val extras = PersistableBundle()
                     extras.putString("instanceName", instanceName)
@@ -80,7 +82,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setSideBar() {
-        // バージョン情報を取得してTextViewに設定
         val versionTextView = findViewById<TextView>(R.id.versionTextView)
         val appVersion = "Flosskey Version : ${BuildConfig.VERSION_NAME}"
         versionTextView.text = appVersion
@@ -98,7 +99,6 @@ class MainActivity : AppCompatActivity() {
         sidebarListView.setOnItemClickListener { _, _, position, _ ->
             when (position) {
                 0 -> {
-                    //startActivity(Intent(this, AccountListActivity::class.java))
                     val intent = Intent(this, AccountListActivity::class.java)
                     startAccountListActivity.launch(intent)
                 }

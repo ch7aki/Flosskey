@@ -7,6 +7,10 @@ import android.icu.text.SimpleDateFormat
 import android.os.Environment
 import android.webkit.MimeTypeMap
 import android.widget.Toast
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -18,8 +22,9 @@ import java.util.Locale
 
 class ImageDownloader(private val context: Context) {
     // 画像保存
+    @OptIn(DelicateCoroutinesApi::class)
     fun saveImage(imageUrl: String) {
-        Thread {
+        GlobalScope.launch(Dispatchers.IO) {
             try {
                 val url = URL(imageUrl)
                 val connection = url.openConnection() as HttpURLConnection
@@ -29,13 +34,17 @@ class ImageDownloader(private val context: Context) {
                 val bitmap = BitmapFactory.decodeStream(input)
                 val fileExtension = getFileExtensionFromUrl(imageUrl)
                 // 画像を保存するためのファイルパスを生成
-                val currentTime = SimpleDateFormat("yyyyMMddHHmm", Locale.getDefault()).format(Date())
+                val currentTime = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date())
                 val filename = "$currentTime.$fileExtension"
                 val directory = File(
                     Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES),
-                    "misskeywebview")
-                if (!directory.exists()) { directory.mkdirs() }
+                        Environment.DIRECTORY_PICTURES
+                    ),
+                    "Flosskey"
+                )
+                if (!directory.exists()) {
+                    directory.mkdirs()
+                }
                 val file = File(directory, filename)
                 val outputStream = FileOutputStream(file)
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
@@ -50,7 +59,7 @@ class ImageDownloader(private val context: Context) {
                     Toast.makeText(context, "画像の保存に失敗しました", Toast.LENGTH_SHORT).show()
                 }
             }
-        }.start()
+        }
     }
     // 画像をURLから取得
     private fun getFileExtensionFromUrl(url: String): String {
