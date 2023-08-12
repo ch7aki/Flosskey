@@ -59,7 +59,7 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
 
     @SuppressLint("SetJavaScriptEnabled")
     fun initializeWebView(webView: WebView) {
-        launcher = context.registerForActivityResult(
+                launcher = context.registerForActivityResult(
             ActivityResultContracts.StartActivityForResult())
         { result ->
             if (result.resultCode == RESULT_OK) {
@@ -72,10 +72,10 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
             }
         }
         // WebViewの設定
-        webView.webViewClient = MisskeyWebViewClient(context)
-        webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-        webView.settings.javaScriptEnabled   = true
-        webView.settings.domStorageEnabled   = true
+        webView.webViewClient              = MisskeyWebViewClient(context)
+        webView.settings.cacheMode         = WebSettings.LOAD_CACHE_ELSE_NETWORK
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
         limitAccesToOuterDomain(webView)
         webView.loadUrl(getMisskeyUrlData("URL",""))
         webView.webChromeClient = object : WebChromeClient() {

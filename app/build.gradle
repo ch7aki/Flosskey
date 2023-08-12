@@ -2,7 +2,6 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
-
 android {
     signingConfigs {
         release {
@@ -11,7 +10,6 @@ android {
                 if (projectPropsFile.exists()) {
                     Properties props = new Properties()
                     props.load(new FileInputStream(projectPropsFile))
-
                     storeFile file(file(project.property("Keys.repo") + props['RELEASE_STORE_FILE']))
                     storePassword props['RELEASE_STORE_PASS']
                     keyAlias props['RELEASE_ALIAS']
@@ -22,7 +20,6 @@ android {
     }
     namespace 'tokyo.leadershouse.flosskey'
     compileSdk 34
-
     defaultConfig {
         applicationId 'tokyo.leadershouse.flosskey'
         minSdk 26
@@ -31,7 +28,6 @@ android {
         versionName '0.0.1'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -47,7 +43,6 @@ android {
         jvmTarget = '1.8'
     }
 }
-
 dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.9.1'
     implementation 'androidx.work:work-runtime-ktx:2.8.1'

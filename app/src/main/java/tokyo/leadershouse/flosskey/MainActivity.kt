@@ -17,6 +17,7 @@ import android.view.MenuItem
 import android.view.View
 import android.webkit.*
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
@@ -33,6 +34,7 @@ import tokyo.leadershouse.flosskey.service.NotificationJobService
 import tokyo.leadershouse.flosskey.ui.AccountListActivity
 import tokyo.leadershouse.flosskey.util.DEVELOPER_MISSKEY_URL
 import tokyo.leadershouse.flosskey.util.GITHUB_URL
+import tokyo.leadershouse.flosskey.util.LICENSE_URL
 import tokyo.leadershouse.flosskey.util.MISSKEY_DOMAIN
 import tokyo.leadershouse.flosskey.util.changeInstance
 import tokyo.leadershouse.flosskey.util.getMisskeyUrlData
@@ -61,7 +63,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setDefaultInstance() {
         val sharedPreferences = getSharedPreferences("instance", Context.MODE_PRIVATE)
-        MISSKEY_DOMAIN = sharedPreferences.getString("misskeyDomain", "misskey.io") ?: "misskey.io"
+        MISSKEY_DOMAIN = sharedPreferences.getString("misskeyDomain", "misskey.io") ?: ""
         Log.d("debug", "MISSKEY_DOMAIN = $MISSKEY_DOMAIN")
     }
 
@@ -145,13 +147,13 @@ class MainActivity : AppCompatActivity() {
             "ライセンス",
             "開発者",
             "ソースコード",
-            "寄付をする"
+            "寄付をする(準備中)"
         )
         val adapter3 = ArrayAdapter(this, android.R.layout.simple_list_item_1, sidebarDevItems )
         sidebarDevListView.adapter = adapter3
         sidebarDevListView.setOnItemClickListener { _, _, position, _ ->
             when (position) {
-                //0 -> startActivity(Intent(this, AccountListActivity::class.java))
+                0 -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(LICENSE_URL)))
                 1 -> webView.loadUrl(DEVELOPER_MISSKEY_URL)
                 2 -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL)))
             }
