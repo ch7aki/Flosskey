@@ -21,7 +21,6 @@ import java.util.Date
 import java.util.Locale
 
 class ImageDownloader(private val context: Context) {
-    // 画像保存
     @OptIn(DelicateCoroutinesApi::class)
     fun saveImage(imageUrl: String) {
         GlobalScope.launch(Dispatchers.IO) {
@@ -42,9 +41,7 @@ class ImageDownloader(private val context: Context) {
                     ),
                     "Flosskey"
                 )
-                if (!directory.exists()) {
-                    directory.mkdirs()
-                }
+                if (!directory.exists()) { directory.mkdirs() }
                 val file = File(directory, filename)
                 val outputStream = FileOutputStream(file)
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)

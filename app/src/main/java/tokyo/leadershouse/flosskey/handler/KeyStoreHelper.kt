@@ -6,10 +6,10 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 
 data class AccountInfo(
-    var accountName: String,
-    var instanceName: String,
-    var apiKey: String,
-    var jobId: Int
+    var accountName  : String,
+    var instanceName : String,
+    var apiKey       : String,
+    var jobId        : Int
 )
 
 object KeyStoreHelper {

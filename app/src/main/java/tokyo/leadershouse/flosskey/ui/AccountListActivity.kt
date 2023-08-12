@@ -66,9 +66,9 @@ class AccountListActivity : AppCompatActivity() {
             dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // OKボタンが押されたときの処理
                 isChanged = true
-                val account = accountEditText.text.toString()
+                val account  = accountEditText.text.toString()
                 val instance = instanceEditText.text.toString()
-                val apiKey = apiKeyEditText.text.toString()
+                val apiKey   = apiKeyEditText.text.toString()
                 // 入力されたアカウントとAPIキーをリストに追加
                 if (!accountList.any { it.apiKey == apiKey }) {
                     accountList.add(AccountInfo(account, instance, apiKey, getCurrentTimestamp()))
@@ -85,15 +85,15 @@ class AccountListActivity : AppCompatActivity() {
             dialogBuilder.setPositiveButton("OK") { _, _ ->
                 // 更新ボタンが押された場合の処理
                 isChanged = true
-                val updatedAccount = accountEditText.text.toString()
+                val updatedAccount  = accountEditText.text.toString()
                 val updatedInstance = instanceEditText.text.toString()
-                val updatedApiKey = apiKeyEditText.text.toString()
+                val updatedApiKey   = apiKeyEditText.text.toString()
                 // 既存のアカウント情報を更新
                 val existingAccount = accountList.find { it.apiKey == accountInfo.apiKey }
                 if (existingAccount != null) {
-                    existingAccount.accountName = updatedAccount
+                    existingAccount.accountName  = updatedAccount
                     existingAccount.instanceName = updatedInstance
-                    existingAccount.apiKey = updatedApiKey
+                    existingAccount.apiKey       = updatedApiKey
                     saveAccountInfo()
                 }
             }
@@ -106,18 +106,16 @@ class AccountListActivity : AppCompatActivity() {
             val positiveButton = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
             // OKボタンの有効・無効を制御する関数
             fun updatePositiveButtonState() {
-                val account = accountEditText.text.toString()
+                val account  = accountEditText.text.toString()
                 val instance = instanceEditText.text.toString()
-                val apiKey = apiKeyEditText.text.toString()
-                val isApiKeyValid = apiKey.isNotBlank() && !accountList.any { it.apiKey == apiKey }
                 val isPositiveButtonEnabled =
-                    account.isNotBlank() && instance.isNotBlank() && isApiKeyValid
+                    account.isNotBlank() && instance.isNotBlank()
                 positiveButton.isEnabled = isPositiveButtonEnabled
             }
             // 入力欄の内容が変更されたらOKボタンの有効・無効を更新する
-            accountEditText.addTextChangedListener { updatePositiveButtonState() }
+            accountEditText.addTextChangedListener  { updatePositiveButtonState() }
             instanceEditText.addTextChangedListener { updatePositiveButtonState() }
-            apiKeyEditText.addTextChangedListener { updatePositiveButtonState() }
+            apiKeyEditText.addTextChangedListener   { updatePositiveButtonState() }
             // 初回表示時にもOKボタンの有効・無効を更新する
             updatePositiveButtonState()
         }

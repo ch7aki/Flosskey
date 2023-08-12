@@ -17,7 +17,6 @@ import android.view.MenuItem
 import android.view.View
 import android.webkit.*
 import android.widget.ArrayAdapter
-import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
@@ -42,7 +41,7 @@ import tokyo.leadershouse.flosskey.webview.MisskeyWebViewClient
 
 class MainActivity : AppCompatActivity() {
     private val contentViewId = 1001
-    private var sidebarOpen = false
+    private var sidebarOpen   = false
     private lateinit var webView: WebView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -193,9 +192,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionHandler(this).requestPermission()
         }
-        else {
-            PermissionHandler(this).requestPermissionsLegacy(this)
-        }
+        else { PermissionHandler(this).requestPermissionsLegacy(this) }
     }
 
     private fun initWebView() {
