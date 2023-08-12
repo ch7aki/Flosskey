@@ -81,7 +81,6 @@ class MainActivity : AppCompatActivity() {
                     val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                         .setPeriodic(15 * 60 * 1000)
-                        .setPersisted(true)
                     val extras = PersistableBundle()
                     extras.putString("instanceName", instanceName)
                     extras.putString("apiKey", apiKey)
