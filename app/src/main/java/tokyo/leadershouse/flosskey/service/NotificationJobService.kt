@@ -1,4 +1,4 @@
-package tokyo.leadershouse.flosskey
+package tokyo.leadershouse.flosskey.service
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -26,6 +26,9 @@ import org.json.JSONObject
 import java.time.Instant
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
+import tokyo.leadershouse.flosskey.handler.KeyStoreHelper
+import tokyo.leadershouse.flosskey.R
+import tokyo.leadershouse.flosskey.util.getMisskeyUrlData
 
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {

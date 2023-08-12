@@ -16,8 +16,9 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication"
-        android:hardwareAccelerated="true">
-        <receiver android:name=".NotificationJobService"
+        android:hardwareAccelerated="true"
+        tools:targetApi="s">
+        <receiver android:name=".service.NotificationJobService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
@@ -26,7 +27,7 @@
             </intent-filter>
         </receiver>
         <service
-            android:name=".NotificationJobService"
+            android:name=".service.NotificationJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <meta-data
             android:name="android:requestLegacyExternalStorage"
@@ -40,7 +41,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".AccountListActivity"
+            android:name=".ui.AccountListActivity"
             android:label="アカウント一覧" />
     </application>
 </manifest>

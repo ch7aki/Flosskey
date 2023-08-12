@@ -1,4 +1,4 @@
-package tokyo.leadershouse.flosskey
+package tokyo.leadershouse.flosskey.ui
 
 import android.app.Activity
 import android.content.Intent
@@ -9,6 +9,10 @@ import android.widget.ListView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
+import tokyo.leadershouse.flosskey.R
+import tokyo.leadershouse.flosskey.handler.AccountInfo
+import tokyo.leadershouse.flosskey.handler.KeyStoreHelper
+import tokyo.leadershouse.flosskey.util.getCurrentTimestamp
 
 class AccountListActivity : AppCompatActivity() {
     private var isChanged: Boolean = false
@@ -22,11 +26,13 @@ class AccountListActivity : AppCompatActivity() {
         accountListView = findViewById(R.id.accountListView)
         val keyStoreAccounts = KeyStoreHelper.loadAccountInfo(this)
         // アカウント情報をリストに追加
-        accountList.add(AccountInfo(
+        accountList.add(
+            AccountInfo(
             "ユーザ情報追加",
             "※ユーザ名はあなたがわかれば何でもOK!",
             "※インスタンス名/APIキーは通知取得に使います！",
-            0))
+            0)
+        )
         accountList.addAll(keyStoreAccounts)
 
         accountAdapter = AccountAdapter(this, accountList)

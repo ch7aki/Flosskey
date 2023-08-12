@@ -1,17 +1,22 @@
-package tokyo.leadershouse.flosskey
+package tokyo.leadershouse.flosskey.handler
 import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 class PermissionHandler(private val activity: Activity) : ActivityCompat.OnRequestPermissionsResultCallback {
     private val permissionCode = 1
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val permissions = arrayOf(
         android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
         android.Manifest.permission.POST_NOTIFICATIONS
     )
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun requestPermission() {
         val permissionsToRequest = permissions.filterNot { checkPermission(it) }
         if (permissionsToRequest.isNotEmpty()) {
@@ -52,6 +57,25 @@ class PermissionHandler(private val activity: Activity) : ActivityCompat.OnReque
                     ).show()
                 }
             }
+        }
+    }
+    fun requestPermissionsLegacy(context: Context) {
+        val permissionsToRequest = arrayOf(
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        )
+
+        val permissionsToCheck = mutableListOf<String>()
+
+        for (permission in permissionsToRequest) {
+            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToCheck.add(permission)
+            }
+        }
+
+        if (permissionsToCheck.isNotEmpty()) {
+            ActivityCompat.requestPermissions(activity, permissionsToCheck.toTypedArray(), 0)
+        } else {
+            // 権限がすでに付与されている場合の処理
         }
     }
 }

@@ -1,6 +1,7 @@
-package tokyo.leadershouse.flosskey
+package tokyo.leadershouse.flosskey.handler
 import android.content.Context
 import android.webkit.CookieManager
+import tokyo.leadershouse.flosskey.util.getMisskeyUrlData
 
 class CookieHandler(private val context: Context) {
     private lateinit var cookieManager: CookieManager

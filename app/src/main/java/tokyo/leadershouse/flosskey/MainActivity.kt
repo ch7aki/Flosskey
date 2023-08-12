@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
@@ -24,6 +25,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
+import tokyo.leadershouse.flosskey.handler.CookieHandler
+import tokyo.leadershouse.flosskey.handler.ImageDownloader
+import tokyo.leadershouse.flosskey.handler.KeyStoreHelper
+import tokyo.leadershouse.flosskey.handler.PermissionHandler
+import tokyo.leadershouse.flosskey.service.NotificationJobService
+import tokyo.leadershouse.flosskey.ui.AccountListActivity
+import tokyo.leadershouse.flosskey.util.DEVELOPER_MISSKEY_URL
+import tokyo.leadershouse.flosskey.util.GITHUB_URL
+import tokyo.leadershouse.flosskey.util.MISSKEY_DOMAIN
+import tokyo.leadershouse.flosskey.util.changeInstance
+import tokyo.leadershouse.flosskey.util.getMisskeyUrlData
+import tokyo.leadershouse.flosskey.webview.MisskeyWebViewClient
 
 class MainActivity : AppCompatActivity() {
     private val contentViewId = 1001
@@ -175,7 +188,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadCookies() { CookieHandler(this).loadCookies() }
 
-    private fun requestPermissions() { PermissionHandler(this).requestPermission() }
+    private fun requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            PermissionHandler(this).requestPermission()
+        }
+        else {
+            PermissionHandler(this).requestPermissionsLegacy(this)
+        }
+    }
 
     private fun initWebView() {
         webView = findViewById(R.id.webView)

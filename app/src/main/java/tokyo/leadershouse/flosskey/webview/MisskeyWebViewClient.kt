@@ -1,4 +1,4 @@
-package tokyo.leadershouse.flosskey
+package tokyo.leadershouse.flosskey.webview
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
@@ -12,6 +12,9 @@ import android.webkit.WebViewClient
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import tokyo.leadershouse.flosskey.handler.CookieHandler
+import tokyo.leadershouse.flosskey.util.MISSKEY_DOMAIN
+import tokyo.leadershouse.flosskey.util.getMisskeyUrlData
 
 class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClient() {
     private lateinit var launcher: ActivityResultLauncher<Intent>

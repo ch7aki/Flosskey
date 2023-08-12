@@ -1,5 +1,4 @@
-package tokyo.leadershouse.flosskey
-import android.content.Context
+package tokyo.leadershouse.flosskey.util
 import android.content.SharedPreferences
 import android.util.Log
 import java.time.Instant

@@ -1,11 +1,12 @@
-package tokyo.leadershouse.flosskey
+package tokyo.leadershouse.flosskey.ui
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import tokyo.leadershouse.flosskey.R
+import tokyo.leadershouse.flosskey.handler.AccountInfo
 
 class AccountAdapter(context: Context, private val accountList: List<AccountInfo>)
     : ArrayAdapter<AccountInfo>(context, 0, accountList) {
