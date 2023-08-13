@@ -30,24 +30,23 @@ class AppUpdate(private val activity: Activity, version: String) {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { e.printStackTrace() }
-
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val apkFile = File(activity.cacheDir, apkName)
                     val outputStream = FileOutputStream(apkFile)
                     val inputStream = response.body?.byteStream()
                     inputStream?.use { input -> outputStream.use { output -> input.copyTo(output) } }
-                    showInstallDialog(apkFile)
+                    showInstallDialog()
                 }
             }
         })
     }
 
-    private fun showInstallDialog(apkFile: File) {
+    private fun showInstallDialog() {
         activity.runOnUiThread {
             val builder = AlertDialog.Builder(activity)
             builder.setTitle("新しいバージョンがあります")
-                .setMessage("ダウンロードしますか？")
+                .setMessage("最新版をダウンロードしますか？")
                 .setPositiveButton("はい") { _, _ -> downloadNewVersion() }
                 .setNegativeButton("いいえ") { dialog, _ -> dialog.dismiss() }
                 .setCancelable(false)

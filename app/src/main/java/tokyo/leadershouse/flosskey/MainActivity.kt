@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         initializeApp()
     }
 
-    private fun getAccessToken(): String? {
+    private fun getAccessToken(): String {
         return BuildConfig.token
     }
 
@@ -67,7 +67,6 @@ class MainActivity : AppCompatActivity() {
         val accessToken = getAccessToken()
         val owner       = "ch1ak1STR"
         val repo        = "Flosskey"
-
         val request = Request.Builder()
             .url("https://api.github.com/repos/$owner/$repo/releases/latest")
             .header("Authorization", "Bearer $accessToken")
