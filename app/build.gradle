@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
+def token= new Properties()
+token.load(new FileInputStream(rootProject.file("local.properties")))
 android {
     signingConfigs {
         release {
@@ -25,8 +27,9 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName '0.0.1'
+        versionName '0.1'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "String", "token", "${token.getProperty('token')}"
     }
     buildTypes {
         release {

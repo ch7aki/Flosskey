@@ -141,8 +141,6 @@ class NotificationJobService : JobService() {
                 }
             } else { break }
         }
-        // デバッグ用
-        //if (newNotifications.isEmpty()) { newNotifications.add("通知はありませんでした。") }
         if (newNotifications.isNotEmpty()) { sendNotifications(newNotifications) }
         val tempolaryId = jsonArray.optJSONObject(0).optString("createdAt")
         val editor = keyStore.edit()

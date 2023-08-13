@@ -25,6 +25,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okio.IOException
+import org.json.JSONObject
+import tokyo.leadershouse.flosskey.handler.AppUpdate
 import tokyo.leadershouse.flosskey.handler.CookieHandler
 import tokyo.leadershouse.flosskey.handler.ImageDownloader
 import tokyo.leadershouse.flosskey.handler.KeyStoreHelper
@@ -50,7 +58,46 @@ class MainActivity : AppCompatActivity() {
         initializeApp()
     }
 
+    private fun getAccessToken(): String? {
+        return BuildConfig.token
+    }
+
+    private fun getLatestRelease() {
+        val client      = OkHttpClient()
+        val accessToken = getAccessToken()
+        val owner       = "ch1ak1STR"
+        val repo        = "Flosskey"
+
+        val request = Request.Builder()
+            .url("https://api.github.com/repos/$owner/$repo/releases/latest")
+            .header("Authorization", "Bearer $accessToken")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("debug", "Error")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    val latestRelease = JSONObject(responseBody!!)
+                    val latestVersionName = latestRelease.getString("tag_name")
+
+                    if (BuildConfig.VERSION_NAME < latestVersionName) {
+                        // 新しいバージョンが利用可能な場合、ダウンロード処理などを行う
+                        runOnUiThread {
+                            Log.d("debug", "New version available: $latestVersionName")
+                            AppUpdate(this@MainActivity,latestVersionName).downloadAndInstallNewVersion()
+                        }
+                    } else { runOnUiThread { Log.d("debug", "App is up to date") } }
+                }
+            }
+        })
+    }
+
     private fun initializeApp() {
+        getLatestRelease()
         setDefaultInstance()
         startBackgroundJob()
         setSideBar()
@@ -95,15 +142,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setSideBar() {
-        val versionTextView = findViewById<TextView>(R.id.versionTextView)
-        val appVersion = "Flosskey Version : ${BuildConfig.VERSION_NAME}"
-        versionTextView.text = appVersion
-        val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
-        val sidebarListView = findViewById<ListView>(R.id.sidebar)
+        val versionTextView    = findViewById<TextView>(R.id.versionTextView)
+        val appVersion         = "Flosskey Version : ${BuildConfig.VERSION_NAME}"
+        versionTextView.text   = appVersion
+        val drawerLayout       = findViewById<DrawerLayout>(R.id.drawerLayout)
+        val sidebarListView    = findViewById<ListView>(R.id.sidebar)
         val sidebarDevListView = findViewById<ListView>(R.id.devListView)
-        val accountList = KeyStoreHelper.loadAccountInfo(this)
-        val instanceNames = accountList.map { it.instanceName }.toTypedArray()
-        val sidebarItems = arrayOf(
+        val accountList        = KeyStoreHelper.loadAccountInfo(this)
+        val instanceNames      = accountList.map { it.instanceName }.toTypedArray()
+        val sidebarItems       = arrayOf(
             "APIキーの管理",
             "ブラウザを更新"
         )
@@ -133,11 +180,11 @@ class MainActivity : AppCompatActivity() {
                 touchInterceptor.performClick()
             }
         }
-        val accountListView = findViewById<ListView>(R.id.accountListView)
-        val adapter2 = ArrayAdapter(this, android.R.layout.simple_list_item_1, instanceNames)
-        accountListView.adapter = adapter2
+        val accountListView       = findViewById<ListView>(R.id.accountListView)
+        val adapter2              = ArrayAdapter(this, android.R.layout.simple_list_item_1, instanceNames)
+        accountListView.adapter   = adapter2
         accountListView.setOnItemClickListener { _, _, position, _ ->
-            val instanceName = instanceNames[position]
+            val instanceName      = instanceNames[position]
             val sharedPreferences = getSharedPreferences("instance", Context.MODE_PRIVATE)
             changeInstance(sharedPreferences, instanceName)
             webView.loadUrl(getMisskeyUrlData("URL", getMisskeyUrlData("URL",instanceName)))
