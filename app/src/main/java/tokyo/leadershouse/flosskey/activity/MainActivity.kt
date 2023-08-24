@@ -126,7 +126,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private fun setSideBar() {
-        Log.d("debug", "実行されてる")
         val versionTextView    = findViewById<TextView>(R.id.versionTextView)
         versionTextView.text   = SIDEBAR_TITLE
         val drawerLayout       = findViewById<DrawerLayout>(R.id.drawerLayout)
