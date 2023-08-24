@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-
 class PermissionHandler(private val activity: Activity) : ActivityCompat.OnRequestPermissionsResultCallback {
     private val permissionCode = 1
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -15,7 +14,6 @@ class PermissionHandler(private val activity: Activity) : ActivityCompat.OnReque
         android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
         android.Manifest.permission.POST_NOTIFICATIONS
     )
-
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun requestPermission() {
         val permissionsToRequest = permissions.filterNot { checkPermission(it) }
@@ -27,12 +25,10 @@ class PermissionHandler(private val activity: Activity) : ActivityCompat.OnReque
             )
         }
     }
-
     private fun checkPermission(permission: String): Boolean {
         val result = ContextCompat.checkSelfPermission(activity, permission)
         return result == PackageManager.PERMISSION_GRANTED
     }
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -43,7 +39,7 @@ class PermissionHandler(private val activity: Activity) : ActivityCompat.OnReque
                 val permissionsGranted = permissions.filterIndexed { index, _ ->
                     grantResults[index] == PackageManager.PERMISSION_GRANTED
                 }
-                val permissionsDenied  = permissions.filterIndexed { index, _ ->
+                val permissionsDenied = permissions.filterIndexed { index, _ ->
                     grantResults[index] != PackageManager.PERMISSION_GRANTED
                 }
                 if (permissionsGranted.isNotEmpty()) {
@@ -60,22 +56,17 @@ class PermissionHandler(private val activity: Activity) : ActivityCompat.OnReque
         }
     }
     fun requestPermissionsLegacy(context: Context) {
-        val permissionsToRequest = arrayOf(
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        )
-
+        val permissionsToRequest = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
         val permissionsToCheck = mutableListOf<String>()
-
         for (permission in permissionsToRequest) {
-            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToCheck.add(permission)
-            }
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    permission
+                ) != PackageManager.PERMISSION_GRANTED
+            ) { permissionsToCheck.add(permission) }
         }
-
         if (permissionsToCheck.isNotEmpty()) {
             ActivityCompat.requestPermissions(activity, permissionsToCheck.toTypedArray(), 0)
-        } else {
-            // 権限がすでに付与されている場合の処理
         }
     }
 }

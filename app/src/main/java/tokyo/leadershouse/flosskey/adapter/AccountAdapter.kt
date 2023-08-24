@@ -1,4 +1,4 @@
-package tokyo.leadershouse.flosskey.ui
+package tokyo.leadershouse.flosskey.adapter
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -7,7 +7,6 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import tokyo.leadershouse.flosskey.R
 import tokyo.leadershouse.flosskey.handler.AccountInfo
-
 class AccountAdapter(context: Context, private val accountList: List<AccountInfo>)
     : ArrayAdapter<AccountInfo>(context, 0, accountList) {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

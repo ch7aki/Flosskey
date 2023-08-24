@@ -14,33 +14,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import tokyo.leadershouse.flosskey.handler.CookieHandler
 import tokyo.leadershouse.flosskey.util.MISSKEY_DOMAIN
-import tokyo.leadershouse.flosskey.util.getMisskeyUrlData
-
+import tokyo.leadershouse.flosskey.util.getMisskeyInstanceUrl
+import tokyo.leadershouse.flosskey.util.script
 class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClient() {
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
-    private val script = """
-            (function() {
-                var imgs = document.querySelectorAll('.pswp__img');
-                for(var i=0; i<imgs.length; i++) {
-                    imgs[i].addEventListener('contextmenu', function(e) {
-                        e.preventDefault();
-                        var title = this.getAttribute('alt');
-                        window.android.saveImage(this.src, title);
-                    });
-                }
-            })();
-        """
-
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-        // ページ読み込み完了後にCookieを保存する
         CookieHandler(context).saveCookies()
     }
-
     private fun limitAccesToOuterDomain(webView: WebView) {
         webView.webViewClient = object : WebViewClient() {
-            @SuppressLint("QueryPermissionsNeeded")
             override fun shouldOverrideUrlLoading(
                 view: WebView,
                 request: WebResourceRequest
@@ -56,7 +40,6 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
             }
         }
     }
-
     @SuppressLint("SetJavaScriptEnabled")
     fun initializeWebView(webView: WebView) {
                 launcher = context.registerForActivityResult(
@@ -71,13 +54,12 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
                 fileUploadCallback = null
             }
         }
-        // WebViewの設定
         webView.webViewClient              = MisskeyWebViewClient(context)
         webView.settings.cacheMode         = WebSettings.LOAD_CACHE_ELSE_NETWORK
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         limitAccesToOuterDomain(webView)
-        webView.loadUrl(getMisskeyUrlData("URL",""))
+        webView.loadUrl(getMisskeyInstanceUrl())
         webView.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(
             webView: WebView,
@@ -91,24 +73,20 @@ class MisskeyWebViewClient(private val context: AppCompatActivity) : WebViewClie
         }
         script.trimIndent()
         webView.evaluateJavascript(script,null)
-        // セキュリティ意識
         webView.settings.allowContentAccess  = false
         webView.settings.allowFileAccess     = false
         webView.settings.builtInZoomControls = false
         webView.settings.databaseEnabled     = false
         webView.settings.displayZoomControls = false
         webView.settings.setGeolocationEnabled(false)
-        // CookieManagerの設定
         CookieHandler(context).manageCookie()
     }
-
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "image/*"
         launcher.launch(intent)
     }
-
     private fun onActivityResult(data: Intent?) {
             data?.let { intent ->
                 val result =

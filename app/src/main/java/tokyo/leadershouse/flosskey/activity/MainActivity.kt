@@ -1,5 +1,4 @@
-package tokyo.leadershouse.flosskey
-
+package tokyo.leadershouse.flosskey.activity
 import android.app.Activity
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
@@ -32,86 +31,73 @@ import okhttp3.Request
 import okhttp3.Response
 import okio.IOException
 import org.json.JSONObject
+import tokyo.leadershouse.flosskey.BuildConfig
+import tokyo.leadershouse.flosskey.R
 import tokyo.leadershouse.flosskey.handler.AppUpdate
 import tokyo.leadershouse.flosskey.handler.CookieHandler
 import tokyo.leadershouse.flosskey.handler.ImageDownloader
 import tokyo.leadershouse.flosskey.handler.KeyStoreHelper
 import tokyo.leadershouse.flosskey.handler.PermissionHandler
 import tokyo.leadershouse.flosskey.service.NotificationJobService
-import tokyo.leadershouse.flosskey.ui.AccountListActivity
+import tokyo.leadershouse.flosskey.listview.AccountListActivity
 import tokyo.leadershouse.flosskey.util.DEVELOPER_MISSKEY_URL
+import tokyo.leadershouse.flosskey.util.GITHUB_API_URL
 import tokyo.leadershouse.flosskey.util.GITHUB_URL
 import tokyo.leadershouse.flosskey.util.LICENSE_URL
 import tokyo.leadershouse.flosskey.util.MISSKEY_DOMAIN
+import tokyo.leadershouse.flosskey.util.SIDEBAR_TITLE
 import tokyo.leadershouse.flosskey.util.changeInstance
-import tokyo.leadershouse.flosskey.util.getMisskeyUrlData
+import tokyo.leadershouse.flosskey.util.getMisskeyInstanceUrl
 import tokyo.leadershouse.flosskey.webview.MisskeyWebViewClient
-
 class MainActivity : AppCompatActivity() {
     private val contentViewId = 1001
     private var sidebarOpen   = false
     private lateinit var webView: WebView
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initializeApp()
     }
-
-    private fun getAccessToken(): String {
-        return BuildConfig.token
-    }
-
     private fun getLatestRelease() {
         val client      = OkHttpClient()
-        val accessToken = getAccessToken()
-        val owner       = "ch1ak1STR"
-        val repo        = "Flosskey"
+        val accessToken = BuildConfig.token
         val request = Request.Builder()
-            .url("https://api.github.com/repos/$owner/$repo/releases/latest")
+            .url(GITHUB_API_URL)
             .header("Authorization", "Bearer $accessToken")
             .build()
-
         client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.d("debug", "Error")
-            }
-
+            override fun onFailure(call: Call, e: IOException) { Log.d("debug", "Error") }
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     val latestRelease = JSONObject(responseBody!!)
                     val latestVersionName = latestRelease.getString("tag_name")
-
                     if (BuildConfig.VERSION_NAME < latestVersionName) {
                         // 新しいバージョンが利用可能な場合、ダウンロード処理などを行う
                         runOnUiThread {
                             Log.d("debug", "New version available: $latestVersionName")
-                            AppUpdate(this@MainActivity,latestVersionName).downloadAndInstallNewVersion()
+                            AppUpdate(this@MainActivity).downloadNewVersion(latestVersionName)
                         }
                     } else { runOnUiThread { Log.d("debug", "App is up to date") } }
                 }
             }
         })
     }
-
     private fun initializeApp() {
         getLatestRelease()
         setDefaultInstance()
         startBackgroundJob()
         setSideBar()
-        configureAppUI()
         loadCookies()
         requestPermissions()
         initWebView()
+        configureActivity(webView)
     }
-
     private fun setDefaultInstance() {
         val sharedPreferences = getSharedPreferences("instance", Context.MODE_PRIVATE)
-        MISSKEY_DOMAIN = sharedPreferences.getString("misskeyDomain", "misskey.io") ?: ""
+        MISSKEY_DOMAIN = sharedPreferences.getString("misskeyDomain", "") ?: ""
         Log.d("debug", "MISSKEY_DOMAIN = $MISSKEY_DOMAIN")
     }
-
     private fun startBackgroundJob() {
         val accountList  = KeyStoreHelper.loadAccountInfo(this)
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
@@ -139,20 +125,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun setSideBar() {
         val versionTextView    = findViewById<TextView>(R.id.versionTextView)
-        val appVersion         = "Flosskey Version : ${BuildConfig.VERSION_NAME}"
-        versionTextView.text   = appVersion
+        versionTextView.text   = SIDEBAR_TITLE
         val drawerLayout       = findViewById<DrawerLayout>(R.id.drawerLayout)
         val sidebarListView    = findViewById<ListView>(R.id.sidebar)
         val sidebarDevListView = findViewById<ListView>(R.id.devListView)
         val accountList        = KeyStoreHelper.loadAccountInfo(this)
         val instanceNames      = accountList.map { it.instanceName }.toTypedArray()
-        val sidebarItems       = arrayOf(
-            "APIキーの管理",
-            "ブラウザを更新"
-        )
+        val sidebarItems       = arrayOf("APIキーの管理", "ブラウザを更新")
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, sidebarItems)
         sidebarListView.adapter = adapter
         sidebarListView.setOnItemClickListener { _, _, position, _ ->
@@ -161,7 +142,7 @@ class MainActivity : AppCompatActivity() {
                     val intent = Intent(this, AccountListActivity::class.java)
                     startAccountListActivity.launch(intent)
                 }
-                1 -> webView.loadUrl(getMisskeyUrlData("URL", ""))
+                1 -> webView.loadUrl(getMisskeyInstanceUrl())
             }
         }
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
@@ -170,7 +151,6 @@ class MainActivity : AppCompatActivity() {
             override fun onDrawerOpened(drawerView: View) { sidebarOpen = true }
             override fun onDrawerClosed(drawerView: View) { sidebarOpen = false }
         })
-
         val touchInterceptor = findViewById<View>(R.id.touchInterceptor)
         touchInterceptor.setOnTouchListener { _, event ->
             if (sidebarOpen) { true }
@@ -186,7 +166,7 @@ class MainActivity : AppCompatActivity() {
             val instanceName      = instanceNames[position]
             val sharedPreferences = getSharedPreferences("instance", Context.MODE_PRIVATE)
             changeInstance(sharedPreferences, instanceName)
-            webView.loadUrl(getMisskeyUrlData("URL", getMisskeyUrlData("URL",instanceName)))
+            webView.loadUrl(getMisskeyInstanceUrl())
         }
         val sidebarDevItems = arrayOf(
             "ライセンス",
@@ -204,7 +184,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     private val startAccountListActivity =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -212,8 +191,18 @@ class MainActivity : AppCompatActivity() {
                 startBackgroundJob()
             }
         }
-
-    private fun configureAppUI() {
+    private fun loadCookies() { CookieHandler(this).loadCookies() }
+    private fun requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            PermissionHandler(this).requestPermission()
+        } else { PermissionHandler(this).requestPermissionsLegacy(this) }
+    }
+    private fun initWebView() {
+        webView = findViewById(R.id.webView)
+        registerForContextMenu(webView)
+        MisskeyWebViewClient(this).initializeWebView(webView)
+    }
+    private fun configureActivity(webView: WebView) {
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
         val callback = object : OnBackPressedCallback(true) {
@@ -229,24 +218,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        this.onBackPressedDispatcher.addCallback(this, callback)
+        onBackPressedDispatcher.addCallback(this, callback)
     }
-
-    private fun loadCookies() { CookieHandler(this).loadCookies() }
-
-    private fun requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            PermissionHandler(this).requestPermission()
-        }
-        else { PermissionHandler(this).requestPermissionsLegacy(this) }
-    }
-
-    private fun initWebView() {
-        webView = findViewById(R.id.webView)
-        registerForContextMenu(webView)
-        MisskeyWebViewClient(this).initializeWebView(webView)
-    }
-
     override fun onCreateContextMenu(
         menu: ContextMenu?,
         v: View?,
@@ -259,7 +232,6 @@ class MainActivity : AppCompatActivity() {
             menu?.add(0, contentViewId, 0, "Download")
         }
     }
-
     override fun onContextItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             contentViewId -> {
@@ -273,7 +245,6 @@ class MainActivity : AppCompatActivity() {
             else -> super.onContextItemSelected(item)
         }
     }
-
     override fun onDestroy() {
         super.onDestroy()
         webView.destroy()
