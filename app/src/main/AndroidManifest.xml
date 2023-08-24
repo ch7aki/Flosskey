@@ -25,7 +25,7 @@
             android:name="android:requestLegacyExternalStorage"
             android:value="true" />
         <activity
-            android:name=".StartupActivity"
+            android:name=".activity.StartupActivity"
             android:exported="true">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
@@ -33,10 +33,10 @@
         </intent-filter>
     </activity>
         <activity
-            android:name=".SidebarTutorialActivity" />
+            android:name=".activity.SidebarTutorialActivity" />
         <activity
-            android:name=".MainActivity" />
+            android:name=".activity.MainActivity" />
         <activity
-            android:name=".ui.AccountListActivity" />
+            android:name=".listview.AccountListActivity" />
     </application>
 </manifest>

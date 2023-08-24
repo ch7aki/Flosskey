@@ -28,15 +28,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import tokyo.leadershouse.flosskey.handler.KeyStoreHelper
 import tokyo.leadershouse.flosskey.R
-import tokyo.leadershouse.flosskey.util.getMisskeyUrlData
-
+import tokyo.leadershouse.flosskey.util.NOTIFICATION_CHANNEL_ID
+import tokyo.leadershouse.flosskey.util.NOTIFICATION_CHANNEL_NAME
+import tokyo.leadershouse.flosskey.util.getMisskeyApiUrl
 @SuppressLint("SpecifyJobSchedulerIdRange")
 class NotificationJobService : JobService() {
-    companion object {
-        private const val NOTIFICATION_CHANNEL_ID   = "flosskey_notifications"
-        private const val NOTIFICATION_CHANNEL_NAME = "Flosskey"
-    }
-
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("debug", "onStartJob[IN]")
         val instanceName = params?.extras?.getString("instanceName")
@@ -50,7 +46,6 @@ class NotificationJobService : JobService() {
         Log.d("debug", "onStartJob[OUT]")
         return true
     }
-
     override fun onStopJob(params: JobParameters?): Boolean {
         Log.d("debug","onStopJob[IN]")
         val channelId = "job_notification_channel"
@@ -66,14 +61,11 @@ class NotificationJobService : JobService() {
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return true
-        }
+        ) { return true }
         notificationManager.notify(9, notificationBuilder.build())
         Log.d("debug","onStopJob[OUT]")
         return true
     }
-
     private suspend fun fetchNotifications(apiKey: String, instanceName: String, jobId: Int) {
         Log.d("debug", "fetchNotifications[IN]")
         val client = OkHttpClient()
@@ -83,7 +75,7 @@ class NotificationJobService : JobService() {
             .toString()
             .toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-            .url(getMisskeyUrlData("API", instanceName))
+            .url(getMisskeyApiUrl(instanceName))
             .post(requestBody)
             .build()
         var response: Response? = null
@@ -99,7 +91,6 @@ class NotificationJobService : JobService() {
             Log.d("debug", "fetchNotifications[OUT]")
         }
     }
-
     private fun processNotifications(responseBody: String, jobId: Int) {
         Log.d("debug", "processNotifications[IN]")
         val jsonArray = JSONArray(responseBody)
@@ -148,7 +139,6 @@ class NotificationJobService : JobService() {
         editor.apply()
         Log.d("debug", "processNotifications[OUT]")
     }
-
     private fun sendNotifications(messages: List<String>) {
         Log.d("debug", "sendNotifications[IN]")
         if (ActivityCompat.checkSelfPermission(
@@ -164,7 +154,6 @@ class NotificationJobService : JobService() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channel = NotificationChannel(channelId, NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
         notificationManager.createNotificationChannel(channel)
-
         val summaryMessage = messages[0]
         val summaryNotification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_stat_name)
@@ -174,24 +163,19 @@ class NotificationJobService : JobService() {
             .setGroup(NOTIFICATION_CHANNEL_NAME)
             .build()
         notificationManager.notify(0, summaryNotification)
-
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_stat_name)
             .setContentTitle(NOTIFICATION_CHANNEL_NAME)
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setGroup(NOTIFICATION_CHANNEL_NAME)
-
         for (i in 1 until messages.size) {
             val message = messages[i]
             notificationBuilder.setContentText(message)
             val intent = packageManager.getLaunchIntentForPackage(packageName)
             intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             val pendingIntent = PendingIntent.getActivity(
-                this,
-                i,
-                intent,
-                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+                this, i, intent, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
             )
             notificationBuilder.setContentIntent(pendingIntent)
             notificationManager.notify(i, notificationBuilder.build())

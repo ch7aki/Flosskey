@@ -19,7 +19,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Date
 import java.util.Locale
-
 class ImageDownloader(private val context: Context) {
     @OptIn(DelicateCoroutinesApi::class)
     fun saveImage(imageUrl: String) {
