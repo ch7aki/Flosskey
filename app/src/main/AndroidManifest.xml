@@ -25,15 +25,18 @@
             android:name="android:requestLegacyExternalStorage"
             android:value="true" />
         <activity
-            android:name=".MainActivity"
+            android:name=".StartupActivity"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>
         <activity
-            android:name=".ui.AccountListActivity"
-            android:label="アカウント一覧" />
+            android:name=".SidebarTutorialActivity" />
+        <activity
+            android:name=".MainActivity" />
+        <activity
+            android:name=".ui.AccountListActivity" />
     </application>
 </manifest>
