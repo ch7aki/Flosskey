@@ -7,8 +7,9 @@ import java.time.Instant
 fun getCurrentTimestamp(): Int { return Instant.now().epochSecond.toInt() }
 fun getMisskeyApiUrl(instanceName: String): String { return "https://$instanceName/api/i/notifications" }
 fun getMisskeyInstanceUrl(): String { return "https://$MISSKEY_DOMAIN/"}
+fun getFlosskeyDeveloperUrl(): String { return "https://$MISSKEY_DOMAIN/@ch1ak1@misskey.io" }
 fun getApkUrl(version: String): String { return "https://github.com/ch1ak1STR/Flosskey/releases/download/$version/Flosskey.apk"}
-fun doActivity(activity: AppCompatActivity, intent: Intent) {
+fun doActivity(activity: AppCompatActivity, intent: Intent) { // finish()を付けてるだけ
     activity.startActivity(intent)
     activity.finish()
 }

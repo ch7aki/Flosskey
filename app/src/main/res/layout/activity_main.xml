@@ -47,25 +47,25 @@
             android:layout_gravity="center"
             android:layout_marginBottom="16dp" />
 
-        <!-- アプリ機能の見出し -->
         <TextView
+            android:id="@+id/openSetting"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="アプリ機能"
+            android:text="設定画面を開く"
             android:textSize="18sp"
             android:textColor="@android:color/white"
-            android:padding="8dp"/>
+            android:padding="8dp"
+            android:layout_marginTop="10dp"/>
 
-        <!-- サイドバーアイテム -->
-        <ListView
-            android:id="@+id/sidebar"
+        <TextView
+            android:id="@+id/reloadBrowser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:divider="@android:color/black"
-            android:dividerHeight="1dp"
-            android:listSelector="@android:color/transparent"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp" />
+            android:text="ブラウザを更新"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:padding="8dp"
+            android:layout_marginTop="10dp"/>
 
         <!-- 登録済みのインスタンスの見出し -->
         <TextView
@@ -74,30 +74,12 @@
             android:text="登録済みインスタンス"
             android:textSize="18sp"
             android:textColor="@android:color/white"
-            android:padding="8dp"/>
+            android:padding="8dp"
+            android:layout_marginTop="10dp"/>
 
         <!-- アカウントリスト -->
         <ListView
             android:id="@+id/accountListView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:divider="@android:color/black"
-            android:dividerHeight="1dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="about Flosskey"
-            android:textSize="18sp"
-            android:textColor="@android:color/white"
-            android:padding="8dp"/>
-
-        <!-- アプリについて -->
-        <ListView
-            android:id="@+id/devListView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"

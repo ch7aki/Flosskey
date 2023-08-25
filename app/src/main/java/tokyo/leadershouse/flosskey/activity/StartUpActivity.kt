@@ -1,4 +1,5 @@
 package tokyo.leadershouse.flosskey.activity
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -58,10 +59,10 @@ class StartupActivity : AppCompatActivity() {
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val builder = AlertDialog.Builder(activity)
-                    builder.setMessage("アプリを終了しますか？")
-                    builder.setPositiveButton("いいえ") { dialog, _ -> dialog.dismiss() }
-                    builder.setNegativeButton("はい") { _, _ -> finish() }
-                    builder.show()
+                builder.setMessage("アプリを終了しますか？")
+                builder.setPositiveButton("いいえ") { dialog, _ -> dialog.dismiss() }
+                builder.setNegativeButton("はい") { _, _ -> finish() }
+                builder.show()
             }
         }
         onBackPressedDispatcher.addCallback(this, callback)

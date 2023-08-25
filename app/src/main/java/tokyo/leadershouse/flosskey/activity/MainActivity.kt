@@ -6,7 +6,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -18,6 +17,7 @@ import android.webkit.*
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,14 +39,12 @@ import tokyo.leadershouse.flosskey.handler.ImageDownloader
 import tokyo.leadershouse.flosskey.handler.KeyStoreHelper
 import tokyo.leadershouse.flosskey.handler.PermissionHandler
 import tokyo.leadershouse.flosskey.service.NotificationJobService
-import tokyo.leadershouse.flosskey.listview.AccountListActivity
-import tokyo.leadershouse.flosskey.util.DEVELOPER_MISSKEY_URL
 import tokyo.leadershouse.flosskey.util.GITHUB_API_URL
-import tokyo.leadershouse.flosskey.util.GITHUB_URL
-import tokyo.leadershouse.flosskey.util.LICENSE_URL
 import tokyo.leadershouse.flosskey.util.MISSKEY_DOMAIN
+import tokyo.leadershouse.flosskey.util.RESULT_GO_DEVLOPER_URL
 import tokyo.leadershouse.flosskey.util.SIDEBAR_TITLE
 import tokyo.leadershouse.flosskey.util.changeInstance
+import tokyo.leadershouse.flosskey.util.getFlosskeyDeveloperUrl
 import tokyo.leadershouse.flosskey.util.getMisskeyInstanceUrl
 import tokyo.leadershouse.flosskey.webview.MisskeyWebViewClient
 class MainActivity : AppCompatActivity() {
@@ -129,22 +127,18 @@ class MainActivity : AppCompatActivity() {
         val versionTextView    = findViewById<TextView>(R.id.versionTextView)
         versionTextView.text   = SIDEBAR_TITLE
         val drawerLayout       = findViewById<DrawerLayout>(R.id.drawerLayout)
-        val sidebarListView    = findViewById<ListView>(R.id.sidebar)
-        val sidebarDevListView = findViewById<ListView>(R.id.devListView)
         val accountList        = KeyStoreHelper.loadAccountInfo(this)
         val instanceNames      = accountList.map { it.instanceName }.toTypedArray()
-        val sidebarItems       = arrayOf("APIキーの管理", "ブラウザを更新")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, sidebarItems)
-        sidebarListView.adapter = adapter
-        sidebarListView.setOnItemClickListener { _, _, position, _ ->
-            when (position) {
-                0 -> {
-                    val intent = Intent(this, AccountListActivity::class.java)
-                    startAccountListActivity.launch(intent)
-                }
-                1 -> webView.loadUrl(getMisskeyInstanceUrl())
-            }
+        val openSetting        = findViewById<TextView>(R.id.openSetting)
+        val reloadBrowser      = findViewById<TextView>(R.id.reloadBrowser)
+        openSetting.setOnClickListener{
+            startSettingsActivity.launch(Intent(this, SettingsActivity::class.java))
         }
+        reloadBrowser.setOnClickListener{
+            webView.loadUrl(getMisskeyInstanceUrl())
+        }
+
+
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
             override fun onDrawerStateChanged(newState: Int) {}
@@ -168,29 +162,7 @@ class MainActivity : AppCompatActivity() {
             changeInstance(sharedPreferences, instanceName)
             webView.loadUrl(getMisskeyInstanceUrl())
         }
-        val sidebarDevItems = arrayOf(
-            "ライセンス",
-            "開発者",
-            "ソースコード",
-            "寄付をする(準備中)"
-        )
-        val adapter3 = ArrayAdapter(this, android.R.layout.simple_list_item_1, sidebarDevItems )
-        sidebarDevListView.adapter = adapter3
-        sidebarDevListView.setOnItemClickListener { _, _, position, _ ->
-            when (position) {
-                0 -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(LICENSE_URL)))
-                1 -> webView.loadUrl(DEVELOPER_MISSKEY_URL)
-                2 -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL)))
-            }
-        }
     }
-    private val startAccountListActivity =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                setSideBar()
-                startBackgroundJob()
-            }
-        }
     private fun loadCookies() { CookieHandler(this).loadCookies() }
     private fun requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -245,6 +217,18 @@ class MainActivity : AppCompatActivity() {
             else -> super.onContextItemSelected(item)
         }
     }
+    private val startSettingsActivity =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK || result.resultCode == RESULT_GO_DEVLOPER_URL) {
+                Log.d("debug","てすと")
+                setSideBar()
+                startBackgroundJob()
+                if (result.resultCode == RESULT_GO_DEVLOPER_URL) {
+                    webView.loadUrl(getFlosskeyDeveloperUrl())
+                    Toast.makeText(this, "開発者のアカウントページを開きました", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     override fun onDestroy() {
         super.onDestroy()
         webView.destroy()

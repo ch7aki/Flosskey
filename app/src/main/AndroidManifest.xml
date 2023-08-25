@@ -38,5 +38,7 @@
             android:name=".activity.MainActivity" />
         <activity
             android:name=".listview.AccountListActivity" />
+        <activity
+            android:name=".activity.SettingsActivity" />
     </application>
 </manifest>
