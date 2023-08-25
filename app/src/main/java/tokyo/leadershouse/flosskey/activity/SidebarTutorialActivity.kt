@@ -6,9 +6,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.ListView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
@@ -45,10 +43,6 @@ class SidebarTutorialActivity : AppCompatActivity() {
         val appVersion            = "Flosskey Version : ${BuildConfig.VERSION_NAME}"
         versionTextView.text      = appVersion
         val drawerLayout          = findViewById<DrawerLayout>(R.id.drawerLayout)
-        val sidebarListView       = findViewById<ListView>(R.id.sidebar)
-        val sidebarItems          = arrayOf("APIキーの管理", "ブラウザを更新")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, sidebarItems)
-        sidebarListView.adapter = adapter
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
             override fun onDrawerStateChanged(newState: Int) {}

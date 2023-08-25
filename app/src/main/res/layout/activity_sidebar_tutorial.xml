@@ -39,7 +39,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="0dp">
 
             <Button
                 android:id="@+id/proceed_button"
@@ -50,13 +50,7 @@
                 android:layout_alignParentEnd="true"
                 android:visibility="gone" />
         </RelativeLayout>
-        <!-- WebViewの下に重なる透明なView -->
-        <View
-            android:id="@+id/touchInterceptor"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            android:clickable="true" />
+
     </LinearLayout>
 
     <!-- サイドバー -->
@@ -85,30 +79,34 @@
             android:layout_marginBottom="16dp" />
 
         <TextView
+            android:id="@+id/openSetting"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="アプリ機能"
+            android:text="設定画面を開く"
             android:textSize="18sp"
             android:textColor="@android:color/white"
-            android:padding="8dp"/>
+            android:padding="8dp"
+            android:layout_marginTop="10dp"/>
 
-        <ListView
-            android:id="@+id/sidebar"
+        <TextView
+            android:id="@+id/reloadBrowser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:divider="@android:color/black"
-            android:dividerHeight="1dp"
-            android:listSelector="@android:color/transparent"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp" />
+            android:text="ブラウザを更新"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:padding="8dp"
+            android:layout_marginTop="10dp"/>
 
+        <!-- 登録済みのインスタンスの見出し -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="登録済みインスタンス"
             android:textSize="18sp"
             android:textColor="@android:color/white"
-            android:padding="8dp"/>
+            android:padding="8dp"
+            android:layout_marginTop="10dp"/>
     </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>
