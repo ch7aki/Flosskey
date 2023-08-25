@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import tokyo.leadershouse.flosskey.R
 import tokyo.leadershouse.flosskey.listview.AccountListActivity
+import tokyo.leadershouse.flosskey.util.GITHUB_ISSUE_URL
 import tokyo.leadershouse.flosskey.util.GITHUB_URL
 import tokyo.leadershouse.flosskey.util.LICENSE_URL
 import tokyo.leadershouse.flosskey.util.QA_URL
@@ -45,7 +46,7 @@ class SettingsActivity : AppCompatActivity() {
                     finish()
                 }
                 4 -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL)))
-                5 -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL))) // issue
+                5 -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_ISSUE_URL))) // issue
             }
         }
     }

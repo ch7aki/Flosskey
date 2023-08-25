@@ -57,8 +57,7 @@ class ImageDownloader(private val context: Context) {
             }
         }
     }
-    // 画像をURLから取得
-    private fun getFileExtensionFromUrl(url: String): String {
+    private fun getFileExtensionFromUrl(url: String): String { // 画像をURLから取得
         val fileUrl = URL(url)
         val path = fileUrl.path
         val extension = MimeTypeMap.getFileExtensionFromUrl(path)

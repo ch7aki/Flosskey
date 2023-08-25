@@ -137,8 +137,6 @@ class MainActivity : AppCompatActivity() {
         reloadBrowser.setOnClickListener{
             webView.loadUrl(getMisskeyInstanceUrl())
         }
-
-
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
             override fun onDrawerStateChanged(newState: Int) {}
