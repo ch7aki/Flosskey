@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
     private fun getLatestRelease() {
         val client      = OkHttpClient()
         val accessToken = BuildConfig.token
-        val request = Request.Builder()
+        val request     = Request.Builder()
             .url(GITHUB_API_URL)
             .header("Authorization", "Bearer $accessToken")
             .build()

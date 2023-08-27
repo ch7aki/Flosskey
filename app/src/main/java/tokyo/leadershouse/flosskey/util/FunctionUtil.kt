@@ -16,6 +16,6 @@ fun doActivity(activity: AppCompatActivity, intent: Intent) { // finish()を付�
 fun changeInstance(pref: SharedPreferences, instanceName: String){
     MISSKEY_DOMAIN = instanceName
     pref.edit().putString("misskeyDomain", instanceName).apply()
-    Log.d("debug","instanceName = $instanceName")
+    Log.d("debug","instanceName   = $instanceName")
     Log.d("debug","MISSKEY_DOMAIN = $MISSKEY_DOMAIN")
 }

@@ -102,20 +102,20 @@ class NotificationJobService : JobService() {
         ) ?: ""
         val instantDevice = Instant.parse(deviceLatestCreatedAt)
         Log.d("debug",deviceLatestCreatedAt)
-        val summaryMessage = "通知がありました。"
+        val summaryMessage   = "通知がありました。"
         val newNotifications = mutableListOf<String>()
         for (i in 0 until jsonArray.length()) {
             val notification = jsonArray.optJSONObject(i)
-            val createdAt = notification.optString("createdAt")
+            val createdAt    = notification.optString("createdAt")
             // API叩いて取得した通知のcratedAt
-            val instantApi = Instant.parse(createdAt)
+            val instantApi       = Instant.parse(createdAt)
             val comparisonResult = instantApi.compareTo(instantDevice)
             if (comparisonResult > 0) {
-                val type = notification.optString("type")
-                val user = notification.optJSONObject("user")
-                val name = user?.optString("name")
+                val type     = notification.optString("type")
+                val user     = notification.optJSONObject("user")
+                val name     = user?.optString("name")
                 val reaction = notification.optString("reaction")
-                val message = when (type) {
+                val message  = when (type) {
                     "follow"               -> "${name}にフォローされました"
                     "mention"              -> "${name}にメンションされました"
                     "reply"                -> "${name}にリプライされました"

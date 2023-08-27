@@ -11,10 +11,10 @@ class AccountAdapter(context: Context, private val accountList: List<AccountInfo
     : ArrayAdapter<AccountInfo>(context, 0, accountList) {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.list_item_account, parent, false)
-        val accountInfo = accountList[position]
-        val accountNameTextView = view.findViewById<TextView>(R.id.accountNameTextView)
-        val instanceTextView = view.findViewById<TextView>(R.id.instanceTextView)
-        val apiKeyTextView = view.findViewById<TextView>(R.id.apiKeyTextView)
+        val accountInfo          = accountList[position]
+        val accountNameTextView  = view.findViewById<TextView>(R.id.accountNameTextView)
+        val instanceTextView     = view.findViewById<TextView>(R.id.instanceTextView)
+        val apiKeyTextView       = view.findViewById<TextView>(R.id.apiKeyTextView)
         accountNameTextView.text = accountInfo.accountName
         instanceTextView.text    = accountInfo.instanceName
         apiKeyTextView.text      = accountInfo.apiKey

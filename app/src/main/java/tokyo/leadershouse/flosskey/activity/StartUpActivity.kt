@@ -1,5 +1,4 @@
 package tokyo.leadershouse.flosskey.activity
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -7,7 +6,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.webkit.WebView
 import android.widget.Button
 import android.widget.EditText
 import androidx.activity.OnBackPressedCallback
@@ -24,16 +22,16 @@ class StartupActivity : AppCompatActivity() {
         window.statusBarColor = Color.BLACK
         supportActionBar?.hide()
         controlOnBackPress(this)
-        val instance = getSharedPreferences("instance", Context.MODE_PRIVATE)
-        MISSKEY_DOMAIN = instance.getString("misskeyDomain", "") ?: ""
-        val firstTutorial = getSharedPreferences("firstTutorial", Context.MODE_PRIVATE)
+        val instance                 = getSharedPreferences("instance", Context.MODE_PRIVATE)
+        MISSKEY_DOMAIN               = instance.getString("misskeyDomain", "") ?: ""
+        val firstTutorial            = getSharedPreferences("firstTutorial", Context.MODE_PRIVATE)
         val isFirstTutorial: Boolean = firstTutorial.getBoolean("isFirstTutorial", true)
-        val accountList  = KeyStoreHelper.loadAccountInfo(this)
+        val accountList              = KeyStoreHelper.loadAccountInfo(this)
         if (MISSKEY_DOMAIN.isEmpty()) {
             setContentView(R.layout.activity_startup)
             val instanceNameEditText: EditText = findViewById(R.id.instance_name_edittext)
             val proceedButton: Button = findViewById(R.id.proceed_button)
-            proceedButton.isEnabled = false
+            proceedButton.isEnabled   = false
             instanceNameEditText.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
