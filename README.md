@@ -1,3 +1,6 @@
+# ⚠️ Development Update : EOL
+Flosskey is now EOL.
+
 # Flosskey
 FlosskeyはFLOSS(Free/Libre and Open Source Software)なAndroidのMisskeyクライアントです。
 
